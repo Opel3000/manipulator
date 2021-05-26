@@ -2,16 +2,17 @@
 #define CUBE_HIGHT_S 31
 
 #define I_TO_3 byte i = 0; i <= 2; i++
-#define J_TO_3 byte j = 0; j <= 2; i++
+#define J_TO_3 byte j = 0; j <= 2; j++
 
 #define FOR_I_5 byte i = 0; i <= 4; i++
-#define FOR_J_5 byte j = 0; j <= 4; i++
+#define FOR_J_5 byte j = 0; j <= 4; j++
 
 
 byte count = 0;
 byte massPlanKyd[5][2];
 byte finalMas[20][7];
 byte countStep = 0;
+byte spiersMas[4];
 
 //1 - красный
 //2 - синий
@@ -19,12 +20,22 @@ byte countStep = 0;
 //4 - зелёный
 //5 - black
 
-byte inputMas[5][2] = {{3, 6}, {4, 9}, {5, 8}, {1, 10}, {7, 6}};
-byte outputMas[3][3] = {{0, 0, 0}, {}, {}};
+byte inputMas[5][2] = {{3, 6}, {4, 9}, {5, 8}, {1, 10}, {2, 7}};
+byte outputMas[3][3] = {{9, 4, 1}, {0, 7, 8}, {0, 0, 0}};
 
 void setup() {
   Serial.begin(9600);
-  delay(10000);
+  delay(3000);
+  lord_of_the_builders_two_arrays(inputMas, outputMas);
+  for (byte i = 0; i <= 19; i++) {
+    for (byte j = 0; j <= 6; j++) {
+      Serial.print(finalMas[i][j]);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+  Serial.println("-----------------------------");
+  countStep = 0;
 }
 
 void loop() {
@@ -34,26 +45,24 @@ void loop() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-byte search_spiers(byte outputMas[3][3]) {
-  byte spiersMas[4];
-  byte countSpiers = 0;
+void search_spiers(byte outputMas[3][3]) {
+  byte countSpiers = 100;
   byte countSpiersNice = 0;
   byte indexDom = 0;
   for (byte i = 0; i <= 1; i++) {
     for (byte j = 0; j <= 2; j++) {
-      if (outputMas[i + 1][j] == 0) {
+      if (outputMas[i + 1][j] == 0 and outputMas[i][j] != 0) {
         if (countSpiers > i) {
           countSpiers = i;
           indexDom = j;
         }
-        outputMas[i][j] = outputMas[i][j] + 5;
-        spiersMas[countSpiers] = outputMas[i][j];
+        //outputMas[i][j] = outputMas[i][j] + 5;
+        spiersMas[countSpiersNice] = outputMas[i][j];
         countSpiersNice++;
       }
     }
   }
   spiersMas[3] = indexDom;
-  return spiersMas;
 }
 
 
@@ -147,18 +156,24 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
   byte failSimulation[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
+
+
   for (I_TO_3) {
     if (outputMas[0][i] > 5) countInOneFloor++;
   }
 
-
   if (countInOneFloor != 2 and countInOneFloor != 3) {
 
+
+
+
     //первые 3 шпиля в столб с наименьшей итоговой высотой
-    byte spiersMas[4] = {search_spiers(outputMas)};
+
+    search_spiers(outputMas);
+
     for (byte i = 0; i <= 3; i++) {
       for (byte j = 0; j <= 4; j++) {
-        if (spiersMas[i] == inputMas[j][1]) {
+        if (spiersMas[i] == inputMas[j][1] and inputMas[j][1] != 0) {
           array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], countStep * CUBE_HIGHT_S);
           //finalMas[countStep] = {1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], countStep * CUBE_HIGHT_S};
           failSimulation[countStep][spiersMas[3]] = spiersMas[i];
@@ -168,9 +183,9 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
       }
     }
 
-
     //находим этажи на первом слое и ищем их индексы в зоне материалов
-    byte oneFloorMas[2] = { 11, 11};
+
+    byte oneFloorMas[2] = {11, 11};
     byte countOneFloor = 0;
     for (I_TO_3) {
       if (outputMas[0][i] < 6 and outputMas[0][i] != 0 and i != spiersMas[3]) {
@@ -178,8 +193,9 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         countOneFloor++;
       }
     }
+
     for (FOR_I_5) {
-      for (byte j = 0; j <= 1; i++) {
+      for (byte j = 0; j <= 1; j++) {
         if (inputMas[i][0] == oneFloorMas[j]) {
           oneFloorMas[j] = i;
         }
@@ -189,6 +205,7 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
     //проверка 1 слоя на этажи и перенос их
 
     byte plaseTwoSS;
+    bool flagErrorVar2 = false;
 
     for (byte j = 0; j <= 2; j++) {
       if (outputMas[0][j] < 6 and outputMas[0][j] != 0 and j != spiersMas[3]) {
@@ -203,11 +220,15 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
           else if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] != 0) {
             for (byte b = 0; b <= 4; b++) { // перетаскивание шпилей
               for (byte k = 0; k <= 1; k++) {
-                if (oneFloorMas[k] != b and nullSpiersMas[b] == b) {
-                  array_generator(1, 0, nullSpiersMas[b], CUBE_HIGHT_B, 0, oneFloorMas[k], CUBE_HIGHT_B);
-                  plaseTwoSS = nullSpiersMas[b];
+                if (oneFloorMas[k] != b and inputMas[b][0] != 0 and inputMas[b][1] == 0) {
+                  array_generator(1, 0, oneFloorMas[k], CUBE_HIGHT_B, 0, b, CUBE_HIGHT_B);
+                  plaseTwoSS = b;
+                  flagErrorVar2 = true;
+                  break;
                 }
+                if (flagErrorVar2) break;
               }
+              if (flagErrorVar2) break;
             }
             array_generator(0, 0, i, 0, 1, j, 0); //перенос этажей
             //finalMas[countStep] = {0, 0, i, 0, 1, j, 0};
@@ -245,7 +266,7 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
       byte flagSS = 0;
 
       for (I_TO_3) {
-        if (outputMas[1][i] < 6 and outputMas[1][i] != 0) {
+        if (outputMas[1][i] < 6 and outputMas[1][i] > 0) {
           stupidSpiersNum2[countSS][0] = outputMas[1][i];
           stupidSpiersNum2[countSS][1] = i;
           countSS++;
@@ -253,14 +274,12 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         }
       }
 
-
       if (flagSS == 2) {
         for (FOR_I_5) {
-          for (byte j = 0; i <= 1; j++) {
+          for (byte j = 0; j <= 1; j++) {
             if (stupidSpiersNum2[j][0] == inputMas[i][0]) {
               array_generator(0, 0, i, CUBE_HIGHT_B, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
               //failSimulation[1][stupidSpiers[j][1]];
-
             }
           }
         }
@@ -278,7 +297,6 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
               else if (!countSOS) {
                 array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, 2 * CUBE_HIGHT_B);
                 saveAss = j;
-
               }
             }
           }
@@ -312,7 +330,7 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
       else if (flagSS == 1) {
         for (FOR_I_5) {
-          for (byte j = 0; i <= 1; j++) {
+          for (byte j = 0; j <= 1; j++) {
             if (stupidSpiersNum2[j][0] == inputMas[i][0]) {
               array_generator(0, 0, i, CUBE_HIGHT_B, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
 
@@ -402,119 +420,127 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
           }
         }
       }
-    }
-    else {
-      byte errorVar = 0;
-      byte saveAssVar3;
-      for (byte i = 2; i >= 0; i--) { //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        for (J_TO_3) {
-          if (failSimulation[i][spiersMas[3]] == outputMas[1][j]) {
-            if (errorVar == 0) {
-              array_generator(1, 1, spiersMas[3], 2 * CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
-              errorVar++;
-              saveAssVar3 = j;
-            }
-            else
-              array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+      else {
+        //////////////////////////////////////////////////////////////////////////////////////
+        for (byte i = 2; i >= 0; i--) {
+          for (byte j = 0; j <= 2; j++) {
+            if (ouputMas[1][])
           }
         }
-      }
-      bool flagUh = false;
-
-      for (I_TO_3) {
-        if (outputMas[i][spiersMas[3]] > 0 and outputMas[i][spiersMas[3]] < 6) flagUh = true;
-      }
-
-      if (flagUh) {
-        array_generator(1, 1, spiersMas[3], 0, 1, saveAssVar3, CUBE_HIGHT_S + CUBE_HIGHT_B);
-
-        for (FOR_I_5) {
-          if (outputMas[0][spiersMas[3]] == inputMas[i][0])
-            array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
-        }
-
-        array_generator(1, 1, saveAssVar3, CUBE_HIGHT_S + CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B);
       }
       else {
-        return 1;
-      }
+        byte errorVar = 0;
+        byte saveAssVar3;
+        for (byte i = 2; i >= 0; i--) {
+          for (J_TO_3) {
+            if (failSimulation[i][spiersMas[3]] == outputMas[1][j]) {
+              if (errorVar == 0) {
+                array_generator(1, 1, spiersMas[3], 2 * CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+                errorVar++;
+                saveAssVar3 = j;
+              }
+              else
+                array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+            }
+          }
+        }
+        bool flagUh = false;
 
-    }///////////////////////////////////////////////////////////////////////////////
-  }
-  else {
-    if (countInOneFloor == 3) {
-      for (I_TO_3) {
-        for (FOR_J_5) {
-          if (outputMas[0][i] == inputMas[j][1])
-            array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 0);
+        for (I_TO_3) {
+          if (outputMas[i][spiersMas[3]] > 0 and outputMas[i][spiersMas[3]] < 6) flagUh = true;
+        }
+        if (flagUh) {
+          array_generator(1, 1, spiersMas[3], 0, 1, saveAssVar3, CUBE_HIGHT_S + CUBE_HIGHT_B);
+          for (FOR_I_5) {
+            if (outputMas[0][spiersMas[3]] == inputMas[i][0])
+              array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
+          }
+          array_generator(1, 1, saveAssVar3, CUBE_HIGHT_S + CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B);
+        }
+        else {
+          return 1;
         }
       }
     }
     else {
-      byte errorIndex;
-      for (I_TO_3) {
-        if (outputMas[0][i] < 6 and outputMas[0][i] > 0) errorIndex = i;
-      }
-      byte countFloorMeh = 0;
-      byte oneKub[2] = {0 , 0};
-      for (I_TO_3) {
-        if (outputMas[i][errorIndex] < 6 and outputMas[i][errorIndex] > 0) {
-          oneKub[countFloorMeh] = outputMas[i][errorIndex];
-          countFloorMeh++;
-        }
-      }
-
-      for (I_TO_3) {
-        for (FOR_J_5) {
-          if (outputMas[0][i] == inputMas[j][1]) {
-            array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 0);
-            inputMas[j][1] = 0;
-          }
-        }
-      }
-
-      for (FOR_I_5) {
-        for (byte j = 0; j <= 1; j++) {
-          if (inputMas[i][0] == oneKub[j] and inputMas[i][1] != 0) {
-            for (byte k = 0; k <= 4 ; k++) {
-              if (inputMas[i][1] == 0 and k != i)
-                array_generator(1, 0, i, CUBE_HIGHT_B, 0, k, CUBE_HIGHT_B);
+      if (countInOneFloor == 3) {
+        for (I_TO_3) {
+          for (FOR_J_5) {
+            if (outputMas[0][i] == inputMas[j][1]) {
+              array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 0);
             }
           }
         }
       }
+      else {
+        byte errorIndex;
+        for (I_TO_3) {
+          if (outputMas[0][i] < 6 and outputMas[0][i] > 0) errorIndex = i;
+        }
+        byte countFloorMeh = 0;
+        byte oneKub[2] = {0 , 0};
+        for (I_TO_3) {
+          if (outputMas[i][errorIndex] < 6 and outputMas[i][errorIndex] > 0) {
+            oneKub[countFloorMeh] = outputMas[i][errorIndex];
+            countFloorMeh++;
+          }
+        }
 
-      byte countMinusVara = 0;
-
-      for (FOR_I_5) {
-        for (byte j = 0; j <= 1; j++) {
-          if (inputMas[i][0] == oneKub[j]) {
-            if (countMinusVara == 0) {
-              array_generator(0, 0, i, 0, 1, errorIndex, 0);
-              countMinusVara++;
-            }
-            else if (countMinusVara == 1 and oneKub[1] != 0) {
-              array_generator(0, 0, i, 0, 1, errorIndex, CUBE_HIGHT_B);
-              countMinusVara++;
+        for (I_TO_3) {
+          for (FOR_J_5) {
+            if (outputMas[0][i] == inputMas[j][1]) {
+              array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 0);
+              inputMas[j][1] = 0;
             }
           }
         }
-      }
-      for (I_TO_3) {
-        for (FOR_J_5) {
-          if (countMinusVara == 1) {
-            if (outputMas[1][i] == inputMas[j][1]) {
-              array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, CUBE_HIGHT_B);
+
+        for (FOR_I_5) {
+          for (byte j = 0; j <= 1; j++) {
+            if (inputMas[i][0] == oneKub[j] and inputMas[i][1] != 0) {
+              for (byte k = 0; k <= 4 ; k++) {
+                if (inputMas[k][1] == 0 and k != i) {
+                  array_generator(1, 0, i, CUBE_HIGHT_B, 0, k, CUBE_HIGHT_B);
+                  inputMas[k][1] = inputMas[i][1];
+                  inputMas[i][1] = 0;
+                  break;
+                }
+              }
             }
           }
-          else {
-            if (outputMas[2][i] == inputMas[j][1]) {
-              array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 2 * CUBE_HIGHT_B);
+        }
+
+        byte countMinusVara = 0;
+
+        for (FOR_I_5) {
+          for (byte j = 0; j <= 1; j++) {
+            if (inputMas[i][0] == oneKub[j]) {
+              if (countMinusVara == 0) {
+                array_generator(0, 0, i, 0, 1, errorIndex, 0);
+                countMinusVara++;
+              }
+              else if (countMinusVara == 1 and oneKub[1] != 0) {
+                array_generator(0, 0, i, 0, 1, errorIndex, CUBE_HIGHT_B);
+                countMinusVara++;
+              }
+            }
+          }
+        }
+        for (I_TO_3) {
+          for (FOR_J_5) {
+            if (countMinusVara == 1) {
+              if (outputMas[1][i] == inputMas[j][1] and outputMas[1][i] != 0) {
+                array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, CUBE_HIGHT_B);
+              }
+            }
+            else {
+              if (outputMas[2][i] == inputMas[j][1]  and outputMas[1][i] != 0) {
+                array_generator(1, 0, j, CUBE_HIGHT_B, 1, i, 2 * CUBE_HIGHT_B);
+              }
             }
           }
         }
       }
     }
+    return 1;
   }
-  return 1;
-}
