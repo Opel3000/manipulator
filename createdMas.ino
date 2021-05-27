@@ -21,7 +21,7 @@ byte spiersMas[4];
 //5 - black
 
 byte inputMas[5][2] = {{3, 6}, {4, 9}, {5, 8}, {1, 10}, {2, 7}};
-byte outputMas[3][3] = {{2, 4, 3}, {6, 1, 5}, {0, 7, 8}};
+byte outputMas[3][3] = {{4, 1, 2}, {5, 9, 8}, {7, 0, 0}};
 
 void setup() {
   Serial.begin(9600);
@@ -236,13 +236,13 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         for (FOR_I_5) {
           flagErrorVar2 = false;
           /*Serial.print("outputMas[0][j] - ");
-          Serial.println(outputMas[0][j]);
-          Serial.print("i - ");
-          Serial.println(i);
-          Serial.print("inputMas[i][0] - ");
-          Serial.println(inputMas[i][0]);
-          Serial.print("inputMas[i][1] - ");
-          Serial.println(inputMas[i][1]);*/
+            Serial.println(outputMas[0][j]);
+            Serial.print("i - ");
+            Serial.println(i);
+            Serial.print("inputMas[i][0] - ");
+            Serial.println(inputMas[i][0]);
+            Serial.print("inputMas[i][1] - ");
+            Serial.println(inputMas[i][1]);*/
           if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] == 0) {
             array_generator(0, 0, i, 0, 1, j, 0);
             plaseTwoSS = i;
@@ -254,14 +254,14 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
             for (byte b = 0; b <= 4; b++) { // перетаскивание шпилей
               for (byte k = 0; k <= 1; k++) {
                 /*Serial.println("ERROR LINE");
-                Serial.print("stopMas[k] - ");
-                Serial.println(stopMas[k]);
-                Serial.print("b - ");
-                Serial.println(b);
-                Serial.print("inputMas[b][0] - ");
-                Serial.println(inputMas[b][0]);
-                Serial.print("inputMas[b][1] - ");
-                Serial.println(inputMas[b][1]);8*/
+                  Serial.print("stopMas[k] - ");
+                  Serial.println(stopMas[k]);
+                  Serial.print("b - ");
+                  Serial.println(b);
+                  Serial.print("inputMas[b][0] - ");
+                  Serial.println(inputMas[b][0]);
+                  Serial.print("inputMas[b][1] - ");
+                  Serial.println(inputMas[b][1]);8*/
                 if (stopMas[k] != b and inputMas[b][0] != 0 and inputMas[b][1] == 0) {
                   //Serial.println("NOOOOOOOOOOOOOOOOOOOPE");
                   array_generator(1, 0, i, CUBE_HIGHT_B, 0, b, CUBE_HIGHT_B);
@@ -322,8 +322,6 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         }
       }
 
-
-
       if (flagSS == 2) {
         for (FOR_I_5) {
           for (byte j = 0; j <= 1; j++) {
@@ -368,23 +366,21 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
 
         bool errorFlag = true;
+
         for (I_TO_3) {
-          Serial.print("outputMas[i][spiersMas[3]] - ");
-          Serial.println(outputMas[i][spiersMas[3]]);
           if (outputMas[i][spiersMas[3]] < 6 and outputMas[i][spiersMas[3]] != 0) {
-            eerrorFlag = false;
+            errorFlag = false;
           }
         }
-        Seri
 
-        if (!errorFlag) {
+        if (errorFlag) {
           return 1;
         }
         else {
           array_generator(1, 1, spiersMas[3], 0, 1, saveAss, 2 * CUBE_HIGHT_B + CUBE_HIGHT_S);
 
           for (FOR_I_5) {
-            if (outputMas[spiersMas[3]][1] == inputMas[i][0]) {
+            if (outputMas[spiersMas[3]][0] == inputMas[i][0]) {
               array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
             }
 
@@ -430,25 +426,27 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
           for (I_TO_3) {
             for (J_TO_3) {
-              for (byte k = 0; k <= 1; k++) {
+              for (int k = 0; k <= 1; k++) {
                 if (outputMas[i][j] == spirtsMas[k][1]) {
                   if (countDa == 0) {
                     array_generator(1, 1, j, 2 * CUBE_HIGHT_S, 1, spirtsMas[k][0], CUBE_HIGHT_B);
                     countDa++;
                     saveAssVar2 = spirtsMas[k][0];
                   }
-                  else
+                  else if (countDa == 1) {
                     array_generator(1, 1, j, CUBE_HIGHT_S, 1, spirtsMas[k][0], 2 * CUBE_HIGHT_B);
+                    countDa++;
+                  }
                 }
               }
             }
-            array_generator(1, 1, spiersMas[3], 0, 1, saveAssVar2, CUBE_HIGHT_B + CUBE_HIGHT_S);
-            for (FOR_I_5) {
-              if (inputMas[i][0] == outputMas[0][spiersMas[3]])
-                array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
-            }
-            array_generator(1, 1, saveAssVar2, CUBE_HIGHT_B + CUBE_HIGHT_S, 1, spiersMas[3], CUBE_HIGHT_B);
           }
+          array_generator(1, 1, spiersMas[3], 0, 1, saveAssVar2, CUBE_HIGHT_B + CUBE_HIGHT_S);
+          for (FOR_I_5) {
+            if (inputMas[i][0] == outputMas[0][spiersMas[3]])
+              array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
+          }
+          array_generator(1, 1, saveAssVar2, CUBE_HIGHT_B + CUBE_HIGHT_S, 1, spiersMas[3], CUBE_HIGHT_B);
           return 1;
         }
 
@@ -497,8 +495,10 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
                 array_generator(1, 1, spiersMas[3], 2 * CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
                 errorVar++;
               }
-              else
+              else if (errorVar == 1) {
                 array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+                errorVar++;;
+              }
             }
           }
         }
@@ -512,14 +512,19 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
           if (failSimulation[i][spiersMas[3]] == outputMas[1][j]) {
             if (errorVar == 0) {
               array_generator(1, 1, spiersMas[3], 2 * CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+              failSimulation[i][spiersMas[3]] = 0;
               errorVar++;
               saveAssVar3 = j;
             }
-            else
+            else if (errorVar == 1) {
               array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, CUBE_HIGHT_B);
+              failSimulation[i][spiersMas[3]] = 0;
+              errorVar++;
+            }
           }
         }
       }
+
       bool flagUh = false;
 
       for (I_TO_3) {
