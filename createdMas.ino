@@ -21,11 +21,11 @@ byte spiersMas[4];
 //5 - black
 
 byte inputMas[5][2] = {{3, 6}, {4, 9}, {5, 8}, {1, 10}, {2, 7}};
-byte outputMas[3][3] = {{9, 4, 3}, {0, 1, 5}, {0, 7, 8}};
+byte outputMas[3][3] = {{2, 4, 3}, {6, 1, 5}, {0, 7, 8}};
 
 void setup() {
   Serial.begin(9600);
-  delay(3000);
+  delay(1000);
   lord_of_the_builders_two_arrays(inputMas, outputMas);
   for (byte i = 0; i <= 19; i++) {
     for (byte j = 0; j <= 6; j++) {
@@ -55,9 +55,15 @@ void search_spiers(byte outputMas[3][3]) {
           countSpiers = i;
           indexDom = j;
         }
-        Serial.println(outputMas[i][j]);
+        //Serial.println(outputMas[i][j]);
         //outputMas[i][j] = outputMas[i][j] + 5;
         spiersMas[countSpiersNice] = outputMas[i][j];
+        countSpiersNice++;
+      }
+      else if (i == 1 and outputMas[i + 1][j] != 0) {
+        //Serial.println(outputMas[i + 1][j]);
+        //outputMas[i][j] = outputMas[i][j] + 5;
+        spiersMas[countSpiersNice] = outputMas[i + 1][j];
         countSpiersNice++;
       }
     }
@@ -174,10 +180,6 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
     for (byte i = 0; i <= 3; i++) {
       for (byte j = 0; j <= 4; j++) {
-        Serial.print("spiersMas[i] - ");
-        Serial.println(spiersMas[i]);
-        Serial.print("inputMas[j][1] - ");
-        Serial.println(inputMas[j][1]);
         if (spiersMas[i] == inputMas[j][1] and inputMas[j][1] != 0) {
           failSimulation[countStep][spiersMas[3]] = spiersMas[i];
           array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], countStep * CUBE_HIGHT_S);
@@ -193,16 +195,33 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
     byte oneFloorMas[2] = {11, 11};
     byte countOneFloor = 0;
     for (I_TO_3) {
+      /*Serial.print("outputMas[0][i] - ");
+        Serial.println(outputMas[0][i]);
+        Serial.print("spiersMas[3] - ");
+        Serial.println(spiersMas[3]);
+        Serial.print("i - ");
+        Serial.println(i);
+        Serial.print("countOneFloor - ");
+        Serial.println(countOneFloor);*/
       if (outputMas[0][i] < 6 and outputMas[0][i] != 0 and i != spiersMas[3]) {
         oneFloorMas[countOneFloor] = outputMas[0][i];
+        //Serial.print("oneFloorMas[countOneFloor] - ");
+        //Serial.println(oneFloorMas[countOneFloor]);
         countOneFloor++;
       }
     }
 
+    /*Serial.print(oneFloorMas[0]);
+      Serial.println(oneFloorMas[1]);*/
+
+    byte stopMas[2] = {0, 0};
+
     for (FOR_I_5) {
       for (byte j = 0; j <= 1; j++) {
         if (inputMas[i][0] == oneFloorMas[j]) {
-          oneFloorMas[j] = i;
+          /*Serial.print("i - ");
+            Serial.println(i);*/
+          stopMas[j] = i;
         }
       }
     }
@@ -215,19 +234,39 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
     for (byte j = 0; j <= 2; j++) {
       if (outputMas[0][j] < 6 and outputMas[0][j] != 0 and j != spiersMas[3]) {
         for (FOR_I_5) {
+          flagErrorVar2 = false;
+          /*Serial.print("outputMas[0][j] - ");
+          Serial.println(outputMas[0][j]);
+          Serial.print("i - ");
+          Serial.println(i);
+          Serial.print("inputMas[i][0] - ");
+          Serial.println(inputMas[i][0]);
+          Serial.print("inputMas[i][1] - ");
+          Serial.println(inputMas[i][1]);*/
           if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] == 0) {
             array_generator(0, 0, i, 0, 1, j, 0);
             plaseTwoSS = i;
-            //finalMas[countStep] = {0, 0, i, 0, 1, j, 0};
             failSimulation[0][j] = inputMas[i][0];
             inputMas[i][0] = 0;
           }
           else if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] != 0) {
+            //Serial.println("YEEEEEEEEEEEEEEEEEEP");
             for (byte b = 0; b <= 4; b++) { // перетаскивание шпилей
               for (byte k = 0; k <= 1; k++) {
-                if (oneFloorMas[k] != b and inputMas[b][0] != 0 and inputMas[b][1] == 0) {
-                  array_generator(1, 0, oneFloorMas[k], CUBE_HIGHT_B, 0, b, CUBE_HIGHT_B);
-                  plaseTwoSS = b;
+                /*Serial.println("ERROR LINE");
+                Serial.print("stopMas[k] - ");
+                Serial.println(stopMas[k]);
+                Serial.print("b - ");
+                Serial.println(b);
+                Serial.print("inputMas[b][0] - ");
+                Serial.println(inputMas[b][0]);
+                Serial.print("inputMas[b][1] - ");
+                Serial.println(inputMas[b][1]);8*/
+                if (stopMas[k] != b and inputMas[b][0] != 0 and inputMas[b][1] == 0) {
+                  //Serial.println("NOOOOOOOOOOOOOOOOOOOPE");
+                  array_generator(1, 0, i, CUBE_HIGHT_B, 0, b, CUBE_HIGHT_B);
+                  inputMas[b][1] = inputMas[i][1];
+                  inputMas[i][1] = 0;
                   flagErrorVar2 = true;
                   break;
                 }
@@ -235,9 +274,11 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
               }
               if (flagErrorVar2) break;
             }
+
             array_generator(0, 0, i, 0, 1, j, 0); //перенос этажей
             //finalMas[countStep] = {0, 0, i, 0, 1, j, 0};
             failSimulation[0][j] = inputMas[i][0];
+            plaseTwoSS = i;
             inputMas[i][0] = 0;
           }
         }
@@ -264,13 +305,15 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
       if (outputMas[2][i] > 0) flag = true;
     }
 
-    if (!flag) {
+    if (flag) {
 
       byte stupidSpiersNum2[2][2] = {{11, 11}, {11, 11}};
       countSS = 0;
       byte flagSS = 0;
 
       for (I_TO_3) {
+        //Serial.print("outputMas[1][i] - ");
+        //Serial.println(outputMas[1][i]);
         if (outputMas[1][i] < 6 and outputMas[1][i] > 0) {
           stupidSpiersNum2[countSS][0] = outputMas[1][i];
           stupidSpiersNum2[countSS][1] = i;
@@ -279,9 +322,15 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         }
       }
 
+
+
       if (flagSS == 2) {
         for (FOR_I_5) {
           for (byte j = 0; j <= 1; j++) {
+            //Serial.print("stupidSpiersNum2[j][0] - ");
+            //Serial.println(stupidSpiersNum2[j][0]);
+            //Serial.print("inputMas[i][0] - ");
+            //Serial.println(inputMas[i][0]);
             if (stupidSpiersNum2[j][0] == inputMas[i][0]) {
               array_generator(0, 0, i, CUBE_HIGHT_B, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
               //failSimulation[1][stupidSpiers[j][1]];
@@ -289,19 +338,29 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
           }
         }
 
-        bool countSOS = true;
+        byte countSOS = 0;
         byte saveAss;
 
         for (int i = 2; i >= 0; i--) {
           for (byte j = 0; j <= 2; j++) {
-            if (failSimulation[i][1] = outputMas[2][j] and j != spiersMas[3]) {
-              if (countSOS) {
+            /*Serial.print("failSimulation[i][spiersMas[3]] - ");
+              Serial.println(failSimulation[i][spiersMas[3]]);
+              Serial.print("outputMas[2][j] - ");
+              Serial.println(outputMas[2][j]);
+              Serial.print("j - ");
+              Serial.println(j);
+              Serial.print("i - ");
+              Serial.println(i);*/
+            if (failSimulation[i][spiersMas[3]] == outputMas[2][j] and j != spiersMas[3]) {
+              if (countSOS == 0) {
                 array_generator(1, 1, spiersMas[3], 2 * CUBE_HIGHT_S, 1, j, 2 * CUBE_HIGHT_B);
-                countSOS = false;
+                countSOS++;
+                break;
               }
-              else if (!countSOS) {
+              else if (countSOS == 1) {
                 array_generator(1, 1, spiersMas[3], CUBE_HIGHT_S, 1, j, 2 * CUBE_HIGHT_B);
                 saveAss = j;
+                countSOS++;
               }
             }
           }
@@ -310,12 +369,15 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
         bool errorFlag = true;
         for (I_TO_3) {
-          if (outputMas[spiersMas[3]][i] < 6 and outputMas[spiersMas[3]][i] != 0) {
-            errorFlag = false;
+          Serial.print("outputMas[i][spiersMas[3]] - ");
+          Serial.println(outputMas[i][spiersMas[3]]);
+          if (outputMas[i][spiersMas[3]] < 6 and outputMas[i][spiersMas[3]] != 0) {
+            eerrorFlag = false;
           }
         }
+        Seri
 
-        if (errorFlag) {
+        if (!errorFlag) {
           return 1;
         }
         else {
