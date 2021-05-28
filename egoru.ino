@@ -59,10 +59,10 @@ Servo ServoZZ;
 int ServX[4] = {135, 50, 60, 90};
 int ServY[3] = {40, 90, 25};
 int ServZ[3] = {150, 100, 80};
+int ServZZ[2] = {90, 0};
 const int gap = 5;
 const int turnPerBigTurn = 8;
 const int stepInmm = 18;
-int IndexOfActionSteps = 0;
 
 const int stepPerTurn = 200;
 const int AAxisTurn = stepPerTurn * 8;
@@ -75,20 +75,12 @@ int InputArrPlan[3][4] = { { 1, 2, 0, 0 }, { 2, 4, 3, 0 }, { 5, 4, 0, 0 } };  //
 int InputArrFack[5][2] = { { 1, 2 }, { 2, 3 }, { 4, 3 }, { 5, 0 }, { 2, 4 } };  ///////     X  Z
 /*
   int MasOfAction[4][7] = { {1, 1, 0, 40, 1, 2, 40},
-                          {0, 0, 1, 70, 1, 0, 40},
-                          {1, 1, 0, 40, 0, 1, 70},
-                          {0, 0, 1, 70, 1, 0, 40}
+                            {0, 0, 1, 70, 1, 0, 40},
+                            {1, 1, 0, 40, 0, 1, 70},
+                            {0, 0, 1, 70, 1, 0, 40}
   };         ///////     (type, PlaceIn, xIn, yIn, PlaceOut, xOut, yOut)
 */
-int MasOfActionSteps[40][5] = {  {0, 0, 0, 0, 0},            ///////     (Astepper, Zstepper, S1, S2, grab)
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0}
-};
+int MasOfActionSteps[100][5];                            ///////     (Astepper, Zstepper, S1, S2, grab)
 
 int MainIndex = 0;
 
@@ -108,13 +100,8 @@ void setup() {
   ServoZZ.attach(SERVO_ZZ);
 
   GoHome();
-
-  //ФУНКЦИЯ НОМЕР НОЛЬ
-
-  //ФУНКЦИЯ НОМЕР НОЛЬ
+  ZeroFunktion();
   lord_of_the_builders_two_arrays(inputMas, outputMas);
-
-
 
   //Serial.println("/////////////////");
   PointG();
@@ -136,7 +123,7 @@ void setup() {
 
 void loop() {
 
-  if (MainIndex < 2) {
+  if (MasOfActionSteps[MainIndex][0] != -1) {
     static uint32_t tmr = millis();
     Astepper.setTarget(MasOfActionSteps[MainIndex][0]);
     //    Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
@@ -766,12 +753,19 @@ void GoHome() {
   //    Astepper.tick();
   //  }
   Astepper.reset();
+  Astepper.setCurrent(-200);
 
   //  while (digitalRead(A_AXIS_LIMIT_SWITCH_PIN)) {
   //    Zstepper.tick();
   //  }
   Zstepper.reset();
-
+  Zstepper.setCurrent(200 * 3);
+  
+  ServoX.write(ServX[0]);
+  ServoY.write(ServY[0]);
+  ServoZ.write(ServZ[0]);
+  ServoZZ.write(ServZZ[0]);
+  /*
   ServoX.write(50);
   ServoY.write(90);
   //  ServoZ.write(150);
@@ -790,19 +784,38 @@ void GoHome() {
   //  ServoY.write(115);
   //  ServoZ.write(150);
   ServoZZ.write(90);
-
+  */
   delay(2000);
+}
 
-  //  Astepper.reset();
-  //  Astepper.setRunMode(FOLLOW_POS);
-  //  Zstepper.reset();
-  //  Zstepper.setRunMode(FOLLOW_POS);
+void ZeroFunktion() {
 
+  Astepper.setTarget(0);
+  Zstepper.setTarget(150);
+  ServoZZ.write(ServZZ[0]);
+  while (Astepper.getState()/* || Zstepper.getState()*/ || millis() - tmr < 100) {
+    Astepper.tick();
+    Zstepper.tick();
+  }
+  
+  ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
+  
+  ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
+  
+  ServoZZ.write(ServZZ[0]);
+  dekay(100);
+  for(int i = 0; i < 4; i++) {
+    Astepper.setTarget(rotate(180 - 60 + 30 * i));
+    ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
+
+    ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
+  }
 }
 
 
 void PointG() {
 
+  int IndexOfActionSteps = 0;
   int (*a)[4];
   //Serial.print("sizeof(MasOfAction) = ");
   //Serial.println(sizeof(MasOfAction));
@@ -827,6 +840,7 @@ void PointG() {
     MasOfActionSteps[IndexOfActionSteps][4] = ServZ[0];
     IndexOfActionSteps++;
   }
+  MasOfActionSteps[IndexOfActionSteps][0] = -1;
   ///////               (type, PlaceIn, xIn, yIn, PlaceOut, xOut, yOut)
 }
 
