@@ -82,6 +82,7 @@ int InputArrFack[5][2] = { { 1, 2 }, { 2, 3 }, { 4, 3 }, { 5, 0 }, { 2, 4 } };  
 */
 int MasOfActionSteps[100][5];                            ///////     (Astepper, Zstepper, S1, S2, grab)
 
+int IndexOfActionSteps = 0;
 int MainIndex = 0;
 
 //---------------END CONST---------------
@@ -760,30 +761,30 @@ void GoHome() {
   //  }
   Zstepper.reset();
   Zstepper.setCurrent(200 * 3);
-  
+
   ServoX.write(ServX[0]);
   ServoY.write(ServY[0]);
   ServoZ.write(ServZ[0]);
   ServoZZ.write(ServZZ[0]);
   /*
-  ServoX.write(50);
-  ServoY.write(90);
-  //  ServoZ.write(150);
-  ServoZZ.write(90);
+    ServoX.write(50);
+    ServoY.write(90);
+    //  ServoZ.write(150);
+    ServoZZ.write(90);
 
-  delay(2000);
+    delay(2000);
 
-  //  ServoX.write(90);
-  //  ServoY.write(25);
-  ServoZ.write(80);
-  ServoZZ.write(0);
+    //  ServoX.write(90);
+    //  ServoY.write(25);
+    ServoZ.write(80);
+    ServoZZ.write(0);
 
-  delay(2000);
+    delay(2000);
 
-  //  ServoX.write(135);
-  //  ServoY.write(115);
-  //  ServoZ.write(150);
-  ServoZZ.write(90);
+    //  ServoX.write(135);
+    //  ServoY.write(115);
+    //  ServoZ.write(150);
+    ServoZZ.write(90);
   */
   delay(2000);
 }
@@ -793,18 +794,19 @@ void ZeroFunktion() {
   Astepper.setTarget(0);
   Zstepper.setTarget(150);
   ServoZZ.write(ServZZ[0]);
+  static uint32_t tmr = millis();
   while (Astepper.getState()/* || Zstepper.getState()*/ || millis() - tmr < 100) {
     Astepper.tick();
     Zstepper.tick();
   }
-  
+
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  
+
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  
+
   ServoZZ.write(ServZZ[0]);
-  dekay(100);
-  for(int i = 0; i < 4; i++) {
+  delay(100);
+  for (int i = 0; i < 4; i++) {
     Astepper.setTarget(rotate(180 - 60 + 30 * i));
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
 
@@ -815,7 +817,6 @@ void ZeroFunktion() {
 
 void PointG() {
 
-  int IndexOfActionSteps = 0;
   int (*a)[4];
   //Serial.print("sizeof(MasOfAction) = ");
   //Serial.println(sizeof(MasOfAction));
@@ -895,7 +896,7 @@ int MoveMM(int MM) {
 }
 
 
-void PrintArr(int (&SomeArr)[40][5]) {
+void PrintArr(int (&SomeArr)[100][5]) {
   //Serial.println("11111111111111111111111111111");
 
   for (int i = 0; i < sizeof(SomeArr) / sizeof(SomeArr[0]); i++) {
