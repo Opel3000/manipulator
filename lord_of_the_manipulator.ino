@@ -21,8 +21,9 @@
 
 byte count = 0;
 byte finalMas[20][7] = {  {1, 0, 0, 40, 1, 1, 40},
-                          {1, 0, 1, 40, 0, 2, 40},
-                          {99, 0, 0, 0, 0, 0, 0}};
+  {1, 0, 1, 40, 0, 2, 40},
+  {99, 0, 0, 0, 0, 0, 0}
+};
 byte countStep = 2;
 byte spiersMas[4];
 
@@ -39,8 +40,8 @@ byte outputMas[3][3] = {{8, 0, 0}, {0, 0, 0}, {0, 0, 0}};
 #define STEPPER2_DIR_PIN 6
 #define STEPPER2_STEP_PIN 3
 
-#define A_AXIS_LIMIT_SWITCH_PIN 9
-#define Z_AXIS_LIMIT_SWITCH_PIN 10
+#define A_AXIS_LIMIT_SWITCH_PIN A0
+#define Z_AXIS_LIMIT_SWITCH_PIN 9
 
 #define SERVO_X   12
 #define SERVO_Y   7
@@ -61,10 +62,11 @@ Servo ServoZZ;
 int ServX[4] = {135, 110, 60, 50};
 int ServY[3] = {130, 90, 23};
 int ServZ[3] = {80, 101, 138};
-int ServZZ[2] = {70, 30};
+int ServZZ[2] = {70, 50};
+
 const int gap = 5;
 const int turnPerBigTurn = 8;
-const int stepInmm = 5;
+const int stepInmm = 6;
 
 const int stepPerTurn = 200;
 const int AAxisTurn = stepPerTurn * 8;
@@ -92,7 +94,8 @@ int MainIndex = 0;
 
 void setup() {
   Serial.begin(9600);
-  delay(1000);
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+    delay(1);
 
   pinMode(A_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
   pinMode(Z_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
@@ -103,67 +106,73 @@ void setup() {
   ServoZZ.attach(SERVO_ZZ);
 
   GoHome();
-/*
-    ServoX.write(ServX[0]);
-    ServoY.write(ServY[0]);
-    ServoZ.write(ServZ[0]);
-    ServoZZ.write(ServZZ[0]);
+  /*
+      ServoX.write(ServX[0]);
+      ServoY.write(ServY[0]);
+      ServoZ.write(ServZ[0]);
+      ServoZZ.write(ServZZ[0]);
 
-    delay(2000);
-  
-    ServoX.write(ServX[1]);
-    ServoY.write(ServY[1]);
-    ServoZ.write(ServZ[1]);
-    ServoZZ.write(ServZZ[1]);
+      delay(2000);
 
-    delay(2000);
-    
-    ServoX.write(ServX[2]);
-    ServoY.write(ServY[1] - ServY[2]);
-    ServoZ.write(ServZ[2]);
+      ServoX.write(ServX[1]);
+      ServoY.write(ServY[1]);
+      ServoZ.write(ServZ[1]);
+      ServoZZ.write(ServZZ[1]);
 
-    delay(2000);
+      delay(2000);
 
-    //  ServoX.write(90);
-    //  ServoY.write(25);
-    ServoZ.write(80);
-    ServoZZ.write(0);
+      ServoX.write(ServX[2]);
+      ServoY.write(ServY[1] - ServY[2]);
+      ServoZ.write(ServZ[2]);
 
-    delay(2000);
+      delay(2000);
 
-    //  ServoX.write(135);
-    //  ServoY.write(115);
-    //  ServoZ.write(150);
-    ServoZZ.write(90);
+      //  ServoX.write(90);
+      //  ServoY.write(25);
+      ServoZ.write(80);
+      ServoZZ.write(0);
+
+      delay(2000);
+
+      //  ServoX.write(135);
+      //  ServoY.write(115);
+      //  ServoZ.write(150);
+      ServoZZ.write(90);
   */
+
   
-  
-  Astepper.setMaxSpeed(1000);
-  Astepper.setAcceleration(4000);
+    Astepper.setMaxSpeed(1000);
+    Astepper.setAcceleration(4000);
 
-  Zstepper.setMaxSpeed(800);
-  Zstepper.setAcceleration(6000);
+    Zstepper.setMaxSpeed(800);
+    Zstepper.setAcceleration(6000);
 
-  Zstepper.setTarget(0);
-    while (Zstepper.tick())
-        Zstepper.tick();
-        
-//  ZeroFunktion();
-//  lord_of_the_builders_two_arrays(inputMas, outputMas);
-  finalMas[countStep][0] = 99;
-  PointG();
-
-  Serial.println("/////////////////");
-  for (int i = 0; i < 19; i++) {
-    for (int j = 0; j < 7; j++) {
-      Serial.print(int(finalMas[i][j]));
-      Serial.print("  ");
+    Zstepper.setTarget(0);
+    Astepper.setTarget(0);
+    while (Zstepper.getState() || Astepper.getState()) {
+      Zstepper.tick();
+      Astepper.tick();
     }
-    Serial.println();
-  }
-  Serial.println("/////////////////");
-  PrintArr(MasOfActionSteps);
 
+    while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+      delay(1);
+
+    ZeroFunktion();
+    //  lord_of_the_builders_two_arrays(inputMas, outputMas);
+    finalMas[countStep][0] = 99;
+    PointG();
+
+    Serial.println("/////////////////");
+    for (int i = 0; i < 19; i++) {
+      for (int j = 0; j < 7; j++) {
+        Serial.print(int(finalMas[i][j]));
+        Serial.print("  ");
+      }
+      Serial.println();
+    }
+    Serial.println("/////////////////");
+    PrintArr(MasOfActionSteps);
+  
   //Serial.println();
   //    PrintArr(MasOfActionSteps);
   //    PrintArr1(MasOfAction);
@@ -172,33 +181,33 @@ void setup() {
 }
 
 void loop() {
+  /*
+    if (MasOfActionSteps[MainIndex][0] != -1) {
+      static uint32_t tmr = millis();
+      Astepper.setTarget(MasOfActionSteps[MainIndex][0]);
+      Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
+      ServoX.write(MasOfActionSteps[MainIndex][2]);
+      ServoY.write(MasOfActionSteps[MainIndex][3]);
+      while (Astepper.getState() || Zstepper.getState() || millis() - tmr < 100) {
+        Astepper.tick();
+        Zstepper.tick();
+      }
 
-  if (MasOfActionSteps[MainIndex][0] != -1) {
-    static uint32_t tmr = millis();
-    Astepper.setTarget(MasOfActionSteps[MainIndex][0]);
-    Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
-    ServoX.write(MasOfActionSteps[MainIndex][2]);
-    ServoY.write(MasOfActionSteps[MainIndex][3]);
-    while (Astepper.getState() || Zstepper.getState() || millis() - tmr < 100) {
-      Astepper.tick();
-      Zstepper.tick();
-    }
-
-    Zstepper.setTarget(MasOfActionSteps[MainIndex][1] - CUBE_HEIGHT_B * stepInmm);
-    while (Zstepper.tick())
-      Zstepper.tick();
-
-    static uint32_t Servtmr = millis();
-    ServoZ.write(MasOfActionSteps[MainIndex][4]);
-    while (millis() - Servtmr < 100)
-      delay(1);
-  
-    Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
-    while (Zstepper.tick())
+      Zstepper.setTarget(MasOfActionSteps[MainIndex][1] - CUBE_HEIGHT_B * stepInmm);
+      while (Zstepper.tick())
         Zstepper.tick();
 
-    MainIndex++;
-  }
+      static uint32_t Servtmr = millis();
+      ServoZ.write(MasOfActionSteps[MainIndex][4]);
+      while (millis() - Servtmr < 100)
+        delay(1);
+
+      Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
+      while (Zstepper.tick())
+          Zstepper.tick();
+
+      MainIndex++;
+    }*/
   /*
       static bool dir;
       if (!Astepper.tick()) {
@@ -793,38 +802,61 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
 
 void GoHome() {
-  //  Astepper.setRunMode(KEEP_SPEED);
-  //  Astepper.setSpeed(-200);
+  int porog = 870;
+  Astepper.setRunMode(KEEP_SPEED);
+  Astepper.setSpeed(-100);
 
   Zstepper.setRunMode(KEEP_SPEED);
-  Zstepper.setSpeed(200);
-
-  //  while (digitalRead(A_AXIS_LIMIT_SWITCH_PIN)) {
-  //    Astepper.tick();
-  //  }
-  Astepper.reset();
-//  Astepper.setCurrent(-200);
-
-  while (digitalRead(A_AXIS_LIMIT_SWITCH_PIN)) {
+  Zstepper.setSpeed(400);
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
     Zstepper.tick();
-  }
   Zstepper.reset();
-  Zstepper.setCurrent(200 * 3);
+  Zstepper.setRunMode(FOLLOW_POS);
+  Zstepper.setTarget(-80);
+  while (Zstepper.getState())
+    Zstepper.tick();
+  Zstepper.setRunMode(KEEP_SPEED);
+  Zstepper.setSpeed(100);
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+    Zstepper.tick();
+  Zstepper.reset();
+
+  Astepper.reset();
+  Astepper.setRunMode(FOLLOW_POS);
+  Astepper.setTarget(50);
+  while (Astepper.getState())
+    Astepper.tick();
+  Astepper.setRunMode(KEEP_SPEED);
+  Astepper.setSpeed(-600);
+  while (analogRead(A_AXIS_LIMIT_SWITCH_PIN) > porog)
+    Astepper.tick();
+  Astepper.reset();
+  Astepper.setRunMode(FOLLOW_POS);
+  Astepper.setTarget(150);
+  while (Astepper.getState())
+    Astepper.tick();
+  Astepper.setRunMode(KEEP_SPEED);
+  Astepper.setSpeed(-100);
+  while (analogRead(A_AXIS_LIMIT_SWITCH_PIN) > porog)
+    Astepper.tick();
+  Astepper.reset();
 
   Astepper.setRunMode(FOLLOW_POS);
   Zstepper.setRunMode(FOLLOW_POS);
+  Astepper.setCurrent(-200*3);
+  Zstepper.setCurrent(1230);
 
   ServoX.write(ServX[0]);
   ServoY.write(ServY[0]);
-  ServoZ.write(ServZ[0]);
+  ServoZ.write(ServZ[2]);
   ServoZZ.write(ServZZ[0]);
   delay(2000);
 }
 
 void ZeroFunktion() {
 
-  Astepper.setTarget(0);
-  Zstepper.setTarget(150);
+  Astepper.setTarget(-50);
+  Zstepper.setTarget(500);
   ServoZZ.write(ServZZ[0]);
   static uint32_t tmr = millis();
   while (Astepper.getState() || Zstepper.getState() || millis() - tmr < 100) {
@@ -833,16 +865,25 @@ void ZeroFunktion() {
   }
 
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  lord_of_the_builders_brotherhood_array();
+  //  lord_of_the_builders_brotherhood_array();
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+    delay(1);
 
-  ServoZZ.write(ServZZ[0]);
+  Zstepper.setTarget(200);
+  while (Zstepper.getState())
+    Zstepper.tick();
+  ServoZZ.write(ServZZ[1]);
   delay(100);
-  for (int i = 0; i < 4; i++) {
-    Astepper.setTarget(rotate(180 - 60 + 30 * i));
+  for (int i = 0; i < 5; i++) {
+    Astepper.setTarget(rotate(180 - 70 + 30 * i));
+    while (Astepper.getState())
+      Astepper.tick();
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    ord_of_the_builders_brotherhood_array();
+    //    lord_of_the_builders_brotherhood_array();
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
+    while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+      delay(1);
   }
 }
 
