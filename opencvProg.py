@@ -12,7 +12,7 @@ start_time = time.time()
 # black - 5
 
 
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+# ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
 building_map = []
 
@@ -163,25 +163,17 @@ def materials_matrix(img):
     print(massmat)
 
     if len(massmat) == 1:
-        ser.write(str(massmat[0][2]).encode('utf-8'))
+        # ser.write(str(massmat[0][2]).encode('utf-8'))
         print(str(massmat[0][2]).encode('utf-8'))
     elif len(massmat) == 2:
 
-        min_w = 999
+        massmat.sort()
 
-        for mas in massmat:
-            if min_w > mas[4]:
-                min_w = mas[4]
-                id_min = mas[2]
+        for i in massmat:
+            massmat_fin.append(i[2])
 
-        massmat_fin.append(id_min)
-
-        for mas in massmat:
-            if mas[2] != id_min:
-                massmat_fin.append(mas[2])
-
-        print((str(massmat_fin[0])+str(massmat_fin[1])).encode('utf-8'))
-        ser.write((str(massmat_fin[0])+str(massmat_fin[1])).encode('utf-8'))
+        print((str(massmat_fin[1])+str(massmat_fin[0])).encode('utf-8'))
+        # ser.write((str(massmat_fin[1])+str(massmat_fin[0])).encode('utf-8'))
 
     else:
         massmat.sort()
@@ -192,7 +184,7 @@ def materials_matrix(img):
                 massmat_fin.append(i[2])
 
         print((str(massmat_fin[1]) + str(massmat_fin[0])).encode('utf-8'))
-        ser.write((str(massmat_fin[1])+str(massmat_fin[0])).encode('utf-8'))
+        # ser.write((str(massmat_fin[1])+str(massmat_fin[0])).encode('utf-8'))
 
 
 def build_matrix(mass_one):
@@ -257,17 +249,17 @@ def build_matrix(mass_one):
 
 def matrix_final():
 
-    cap = cv2.VideoCapture(3)
+    # cap = cv2.VideoCapture(3)
+#
+    # while True:
+    #     ret, frame = cap.read()
+    #     cv2.imshow('img1', frame)
+    #     cv2.imwrite('b1.png', frame)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    #     break
 
-    while True:
-        ret, frame = cap.read()
-        cv2.imshow('img1', frame)
-        cv2.imwrite('b1.png', frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        break
-
-    cap.release()
+    # cap.release()
 
     img = cv2.imread('cfin.png')
 
@@ -404,7 +396,7 @@ def matrix_final():
 countVar = 0
 
 while True:
-    if ser.in_waiting > 0:
+    # if ser.in_waiting > 0:
         if countVar == 0:
             matrix_final()
             building_map_fin = ""
@@ -415,24 +407,24 @@ while True:
 
             print(building_map_fin)
 
-            ser.write(building_map.encode('utf-8'))  # building_map
+            # ser.write(building_map.encode('utf-8'))  # building_map
             countVar+=1
 
         elif countVar > 0 and countVar < 6:
-            cap = cv2.VideoCapture(3)
-            while True:
-                ret, frame = cap.read()
-                cv2.imshow('img1', frame)
-                cv2.imwrite('c'+str(countVar)+'.png', frame)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
-                break
+            # cap = cv2.VideoCapture(3)
+            # while True:
+            #     ret, frame = cap.read()
+            #     cv2.imshow('img1', frame)
+            #     cv2.imwrite('c'+str(countVar)+'.png', frame)
+            #     cv2.waitKey(0)
+            #     cv2.destroyAllWindows()
+            #     break
 
             img = cv2.imread('c'+str(countVar)+'.png')
             materials_matrix(img)
             # hsv_black_blue(imghsv)
             countVar += 1
-            cap.release()
+            # cap.release()
         else:
             exit(0)
 
