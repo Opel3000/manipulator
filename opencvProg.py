@@ -12,11 +12,13 @@ start_time = time.time()
 # black - 5
 
 
-# ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+# ser = serial.Serial('/dev/ttyACM0', 9600)
 
 building_map = []
 
 pixel_x = 640
+
+cameraPort = 2
 
 
 def watchimg(img):
@@ -30,43 +32,45 @@ def segimg(img):
     pixel = 4
 
     global red_min, red_max
-    red_min = np.array((0, 10, 140), np.uint8)
-    red_max = np.array((35, 45, 255), np.uint8)
-    cv2.rectangle(img, (0, 0), (pixel, pixel), (35, 45, 255), -1)
+    red_min = np.array((10, 3, 100), np.uint8)  # 0, 10, 140
+    red_max = np.array((50, 50, 255), np.uint8)
+    cv2.rectangle(img, (0, 0), (pixel, pixel), (10, 10, 100), -1)
 
     global blm_min, blm_max
     blm_min = np.array((0, 0, 0), np.uint8)
-    blm_max = np.array((15, 20, 20), np.uint8)
+    blm_max = np.array((40, 40, 40), np.uint8)
     cv2.rectangle(img, (pixel, 0), (pixel*2, pixel), (15, 20, 20), -1)
 
     global gre_min, gre_max
-    gre_min = np.array((20, 65, 0), np.uint8)
-    gre_max = np.array((80, 255, 20), np.uint8)
+    gre_min = np.array((47, 85, 0), np.uint8)     #20 45
+    gre_max = np.array((100, 255, 25), np.uint8)  #45
     cv2.rectangle(img, (pixel*2, 0), (pixel*3, pixel), (80, 255, 20), -1)
 
     global yel_min, yel_max
-    yel_min = np.array((30, 155, 195), np.uint8)
-    yel_max = np.array((90, 210, 220), np.uint8)
+    yel_min = np.array((30, 155, 195), np.uint8)  # 200 190 75
+    yel_max = np.array((110, 210, 220), np.uint8)  #255 255 130
     cv2.rectangle(img, (pixel*3, 0), (pixel*4, pixel), (90, 210, 220), -1)
 
     global blu_min, blu_max
-    blu_min = np.array((60, 0, 0), np.uint8)
-    blu_max = np.array((255, 40, 20), np.uint8)
+    blu_min = np.array((50, 15, 0), np.uint8)  # 60 0 0
+    blu_max = np.array((255, 75, 30), np.uint8)  # 255, 40, 20
     cv2.rectangle(img, (pixel*4, 0), (pixel*5, pixel), (255, 40, 20), -1)
 
-    global hsv_blu_min, hsv_blu_max
-    hsv_blu_min = np.array((90, 50, 70), np.uint8)
-    hsv_blu_max = np.array((120, 255, 255), np.uint8)
+    #  global hsv_blu_min, hsv_blu_max
+    #  hsv_blu_min = np.array((90, 50, 70), np.uint8)
+    #  hsv_blu_max = np.array((120, 255, 255), np.uint8)
 
-    global hsv_blm_min, hsv_blm_max
-    hsv_blm_min = np.array((0, 0, 60), np.uint8)
-    hsv_blm_max = np.array((70, 70, 70), np.uint8)
+    #  global hsv_blm_min, hsv_blm_max
+    #  hsv_blm_min = np.array((0, 0, 60), np.uint8)
+    #  hsv_blm_max = np.array((70, 70, 70), np.uint8)
 
 
 def obrezka(F, hsv_min, hsv_max):
     F[1][1] = 255
 
     F = cv2.inRange(F, hsv_min, hsv_max)
+
+    watchimg(F)
 
     x, y, w, h = 0, 0, 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -75,7 +79,7 @@ def obrezka(F, hsv_min, hsv_max):
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
         (x, y, w, h) = cv2.boundingRect(contours[0])
 
-        if h > 10 and w > 10 and h < 110 and w < 110:
+        if h > 10 and w > 10:
             flagError = True
         else:
             flagError = False
@@ -249,22 +253,23 @@ def build_matrix(mass_one):
 
 def matrix_final():
 
-    # cap = cv2.VideoCapture(3)
-#
-    # while True:
-    #     ret, frame = cap.read()
-    #     cv2.imshow('img1', frame)
-    #     cv2.imwrite('b1.png', frame)
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
-    #     break
+    cap = cv2.VideoCapture(cameraPort)
+    while True:
+        ret, frame = cap.read()
+        if frame[0][0][0] != 0:
+            cv2.imwrite('cfin.png', frame)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            break
 
-    # cap.release()
+    cap.release()
 
     img = cv2.imread('cfin.png')
 
-    M = cv2.getRotationMatrix2D((640 // 2, 480 // 2), 80, 1.0)
+    M = cv2.getRotationMatrix2D((640 // 2, 480 // 2), 82, 1.0)
     img = cv2.warpAffine(img, M, (640, 480))
+
+    watchimg(img)
 
     global imghsv
     count, massmap = -1, []
@@ -307,9 +312,9 @@ def matrix_final():
         # break
         mid_x, mid_y, ids, h, x, y, w = obrezka(img, blu_min, blu_max)
         if ids:
-            count += 1
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmap.append([mid_x, mid_y, 4, h, w, count])
+             count += 1
+             cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+             massmap.append([mid_x, mid_y, 4, h, w, count])
         else:
             break
 
@@ -317,9 +322,10 @@ def matrix_final():
         # break
         mid_x, mid_y, ids, h, x, y, w = obrezka(img, blm_min, blm_max)
         if ids:
-            count += 1
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmap.append([mid_x, mid_y, 5, h, w, count])
+            if h < 300 and w < 300:
+                count += 1
+                cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+                massmap.append([mid_x, mid_y, 5, h, w, count])
         else:
             break
 
@@ -396,6 +402,10 @@ def matrix_final():
 countVar = 0
 
 while True:
+    # ser.write(countVar.encode('utf-8'))  # building_map
+    break
+
+while True:
     # if ser.in_waiting > 0:
         if countVar == 0:
             matrix_final()
@@ -407,25 +417,31 @@ while True:
 
             print(building_map_fin)
 
-            # ser.write(building_map.encode('utf-8'))  # building_map
-            countVar+=1
+            # ser.write(building_map_fin.encode('utf-8'))  # building_map
+            countVar += 1
 
-        elif countVar > 0 and countVar < 6:
-            # cap = cv2.VideoCapture(3)
-            # while True:
-            #     ret, frame = cap.read()
-            #     cv2.imshow('img1', frame)
-            #     cv2.imwrite('c'+str(countVar)+'.png', frame)
-            #     cv2.waitKey(0)
-            #     cv2.destroyAllWindows()
-            #     break
-
+        elif (countVar > 0) and countVar < 6:
+            cap = cv2.VideoCapture(cameraPort)
+            while True:
+                ret, frame = cap.read()
+                if frame[0][0][0] != 0:
+                    cv2.imshow('img1', frame)
+                    cv2.imwrite('c'+str(countVar)+'.png', frame)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+                    break
+#
             img = cv2.imread('c'+str(countVar)+'.png')
             materials_matrix(img)
             # hsv_black_blue(imghsv)
             countVar += 1
-            # cap.release()
+            watchimg(img)
+            cap.release()
         else:
-            exit(0)
+            while True:
+                # if ser.in_waiting > 0:
+                    countVar = 0
+
+
 
 print("--- %s seconds ---" % (time.time() - start_time))
