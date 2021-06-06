@@ -18,7 +18,7 @@ building_map = []
 
 pixel_x = 640
 
-cameraPort = 2
+cameraPort = 0
 
 
 def watchimg(img):
@@ -34,7 +34,7 @@ def segimg(img):
     global red_min, red_max
     red_min = np.array((0, 180, 0), np.uint8)  # 10, 3, 100
     red_max = np.array((80, 255, 255), np.uint8)
-    cv2.rectangle(img, (0, 0), (pixel, pixel), (10, 10, 100), -1)
+    cv2.rectangle(img, (0, 0), (pixel, pixel), (0, 0, 255), -1)
 
     global blm_min, blm_max
     blm_min = np.array((0, 0, 0), np.uint8)
@@ -56,15 +56,7 @@ def segimg(img):
     blu_max = np.array((140, 255, 255), np.uint8)  # 255, 40, 20
     cv2.rectangle(img, (pixel*4, 0), (pixel*5, pixel), (255, 40, 20), -1)
 
-    #  global hsv_blu_min, hsv_blu_max
-    #  hsv_blu_min = np.array((90, 50, 70), np.uint8)
-    #  hsv_blu_max = np.array((120, 255, 255), np.uint8)
-
-    #  global hsv_blm_min, hsv_blm_max
-    #  hsv_blm_min = np.array((0, 0, 60), np.uint8)
-    #  hsv_blm_max = np.array((70, 70, 70), np.uint8)
-
-
+    
 def obrezka(F, hsv_min, hsv_max):
     F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
 
