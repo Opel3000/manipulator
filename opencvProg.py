@@ -32,28 +32,28 @@ def segimg(img):
     pixel = 4
 
     global red_min, red_max
-    red_min = np.array((10, 3, 100), np.uint8)  # 0, 10, 140
-    red_max = np.array((50, 50, 255), np.uint8)
+    red_min = np.array((0, 180, 0), np.uint8)  # 10, 3, 100
+    red_max = np.array((80, 255, 255), np.uint8)
     cv2.rectangle(img, (0, 0), (pixel, pixel), (10, 10, 100), -1)
 
     global blm_min, blm_max
     blm_min = np.array((0, 0, 0), np.uint8)
-    blm_max = np.array((40, 40, 40), np.uint8)
+    blm_max = np.array((255, 255, 45), np.uint8)
     cv2.rectangle(img, (pixel, 0), (pixel*2, pixel), (15, 20, 20), -1)
 
     global gre_min, gre_max
-    gre_min = np.array((47, 85, 0), np.uint8)     #20 45
-    gre_max = np.array((100, 255, 25), np.uint8)  #45
+    gre_min = np.array((38, 146, 0), np.uint8)     #20 45
+    gre_max = np.array((91, 255, 255), np.uint8)  #45
     cv2.rectangle(img, (pixel*2, 0), (pixel*3, pixel), (80, 255, 20), -1)
 
     global yel_min, yel_max
-    yel_min = np.array((30, 155, 195), np.uint8)  # 200 190 75
-    yel_max = np.array((110, 210, 220), np.uint8)  #255 255 130
+    yel_min = np.array((0, 82, 134), np.uint8)  # 200 190 75
+    yel_max = np.array((55, 255, 255), np.uint8)  #255 255 130
     cv2.rectangle(img, (pixel*3, 0), (pixel*4, pixel), (90, 210, 220), -1)
 
     global blu_min, blu_max
-    blu_min = np.array((50, 15, 0), np.uint8)  # 60 0 0
-    blu_max = np.array((255, 75, 30), np.uint8)  # 255, 40, 20
+    blu_min = np.array((90, 100, 41), np.uint8)  # 60 0 0
+    blu_max = np.array((140, 255, 255), np.uint8)  # 255, 40, 20
     cv2.rectangle(img, (pixel*4, 0), (pixel*5, pixel), (255, 40, 20), -1)
 
     #  global hsv_blu_min, hsv_blu_max
@@ -66,7 +66,7 @@ def segimg(img):
 
 
 def obrezka(F, hsv_min, hsv_max):
-    F[1][1] = 255
+    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
 
     F = cv2.inRange(F, hsv_min, hsv_max)
 
@@ -94,7 +94,7 @@ def obrezka(F, hsv_min, hsv_max):
 
 
 def obrezkaMat(F, hsv_min, hsv_max):
-
+    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
     F = cv2.inRange(F, hsv_min, hsv_max)
     x, y, w, h = 0, 0, 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
