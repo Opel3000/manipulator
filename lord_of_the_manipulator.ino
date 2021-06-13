@@ -20,15 +20,31 @@
 #define CUBE_HIGHT_S 31
 
 byte count = 0;
-byte finalMas[20][7] = {  {1, 0, 0, 40, 1, 1, 40},
-  {1, 0, 1, 40, 0, 2, 40},
-  {99, 0, 0, 0, 0, 0, 0}
-};
-byte countStep = 2;
+byte finalMas[20][7];/* = {
+  //                          {1, 0, 2, 41, 1, 0, 41},
+
+                          {0, 0, 0, 72, 1, 2, 31},
+                          {0, 0, 2, 72, 1, 2, 62},
+                          {0, 0, 3, 72, 1, 2, 93},
+                          {1, 0, 2, 41, 1, 0, 41},
+                          {0, 0, 1, 72, 0, 2, 31},
+                          {0, 0, 4, 72, 0, 2, 62},
+                          {1, 0, 3, 41, 1, 0, 82},
+                          {1, 0, 1, 41, 1, 1, 41},
+                          {1, 0, 0, 41, 1, 1, 82},
+                          {0, 1, 2, 93, 1, 0, 113},
+                          {0, 1, 2, 62, 1, 1, 113},
+                          {0, 1, 2, 31, 1, 1, 144},
+                          {1, 0, 4, 41, 1, 2, 41},
+                          {0, 1, 1, 144, 1, 2, 72},
+
+                          {99, 0, 0, 0, 0, 0, 0}
+  };*/
+byte countStep = 0;
 byte spiersMas[4];
 
-byte inputMas[5][2] = {{1, 8}, {3, 10}, {2, 7}, {4, 6}, {5, 9}};
-byte outputMas[3][3] = {{8, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+byte inputMas[5][2];// = {{1, 8}, {3, 10}, {2, 7}, {4, 6}, {5, 9}};
+byte outputMas[3][3];// = {{8, 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
 //---------------CONST MANIPULATOR---------------
 
@@ -59,9 +75,10 @@ Servo ServoY;
 Servo ServoZ;
 Servo ServoZZ;
 
-int ServX[4] = {135, 110, 60, 50};
-int ServY[3] = {130, 90, 23};
-int ServZ[3] = {80, 101, 138};
+int del = 100;
+int ServX[4] = {150, 93, 90, 40};
+int ServY[3] = {130, 95, 22};
+int ServZ[3] = {166, 144, 108};
 int ServZZ[2] = {70, 50};
 
 const int gap = 5;
@@ -69,14 +86,9 @@ const int turnPerBigTurn = 8;
 const int stepInmm = 6;
 
 const int stepPerTurn = 200;
-const int AAxisTurn = stepPerTurn * 8;
-const int ZAxisTurn = stepPerTurn * 8;
 
 int Stepper[4] = {0, 0, 0 , 0};
 
-int InputArrPlan[3][4] = { { 1, 2, 0, 0 }, { 2, 4, 3, 0 }, { 5, 4, 0, 0 } };  ///////     X  Z
-
-int InputArrFack[5][2] = { { 1, 2 }, { 2, 3 }, { 4, 3 }, { 5, 0 }, { 2, 4 } };  ///////     X  Z
 /*
   int MasOfAction[4][7] = { {1, 1, 0, 40, 1, 2, 40},
                             {0, 0, 1, 70, 1, 0, 40},
@@ -88,14 +100,13 @@ int MasOfActionSteps[80][5];                            ///////     (Astepper, Z
 
 int IndexOfActionSteps = 0;
 int MainIndex = 0;
+bool F = 1;
 
 //---------------END CONST---------------
 
 
 void setup() {
   Serial.begin(9600);
-  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-    delay(1);
 
   pinMode(A_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
   pinMode(Z_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
@@ -106,6 +117,13 @@ void setup() {
   ServoZZ.attach(SERVO_ZZ);
 
   GoHome();
+
+  /*  while(true){
+      Serial.println("GOO");
+      if (Serial.available() > 0){
+        break;
+      }
+    }*/
   /*
       ServoX.write(ServX[0]);
       ServoY.write(ServY[0]);
@@ -140,28 +158,54 @@ void setup() {
       ServoZZ.write(90);
   */
 
+  Astepper.setMaxSpeed(800);
+  Astepper.setAcceleration(4000);
+
+  Zstepper.setMaxSpeed(600);
+  Zstepper.setAcceleration(5000);
   
-    Astepper.setMaxSpeed(1000);
-    Astepper.setAcceleration(4000);
+  delay(1000);
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+    delay(1);
 
-    Zstepper.setMaxSpeed(800);
-    Zstepper.setAcceleration(6000);
+  ServoZ.write(ServZ[0]);
+  Zstepper.setTarget(120 * stepInmm);
+  Astepper.setTarget(0);
+  while (Zstepper.getState() || Astepper.getState()) {
+    Zstepper.tick();
+    Astepper.tick();
+  }
+  delay(1000);
 
-    Zstepper.setTarget(0);
-    Astepper.setTarget(0);
-    while (Zstepper.getState() || Astepper.getState()) {
-      Zstepper.tick();
-      Astepper.tick();
+
+  ZeroFunktion();
+  lord_of_the_builders_two_arrays(inputMas, outputMas);
+  finalMas[countStep][0] = 99;
+  Serial.println("Go");
+  /*
+  Serial.println("/////////////////");
+  for (int i = 0; i < 19; i++) {
+    for (int j = 0; j < 7; j++) {
+      Serial.print(int(finalMas[i][j]));
+      Serial.print("  ");
     }
+    Serial.println();
+  }
+  Serial.println("/////////////////");*/
+  
+  Fix();
+  PointG();
+//  PrintArr(MasOfActionSteps);
 
-    while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-      delay(1);
-
-    ZeroFunktion();
-    //  lord_of_the_builders_two_arrays(inputMas, outputMas);
-    finalMas[countStep][0] = 99;
-    PointG();
-
+  Zstepper.setTarget(120 * stepInmm);
+  Astepper.setTarget(0);
+  while (Zstepper.getState() || Astepper.getState()) {
+    Zstepper.tick();
+    Astepper.tick();
+  }
+  delay(500);
+//  PrintArr(MasOfActionSteps);
+  /*
     Serial.println("/////////////////");
     for (int i = 0; i < 19; i++) {
       for (int j = 0; j < 7; j++) {
@@ -172,42 +216,77 @@ void setup() {
     }
     Serial.println("/////////////////");
     PrintArr(MasOfActionSteps);
-  
+  */
   //Serial.println();
-  //    PrintArr(MasOfActionSteps);
-  //    PrintArr1(MasOfAction);
   // delay(1000);
 
 }
 
 void loop() {
-  /*
-    if (MasOfActionSteps[MainIndex][0] != -1) {
-      static uint32_t tmr = millis();
-      Astepper.setTarget(MasOfActionSteps[MainIndex][0]);
-      Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
+  if (MasOfActionSteps[MainIndex][0] != -1) {
+    static uint32_t tmr = millis();
+    Astepper.setTarget(MasOfActionSteps[MainIndex][0]);
+    if(MasOfActionSteps[MainIndex][3] == ServY[1])
+      ServoX.write(ServX[0]);
+    else
       ServoX.write(MasOfActionSteps[MainIndex][2]);
-      ServoY.write(MasOfActionSteps[MainIndex][3]);
-      while (Astepper.getState() || Zstepper.getState() || millis() - tmr < 100) {
-        Astepper.tick();
-        Zstepper.tick();
+    ServoY.write(MasOfActionSteps[MainIndex][3]);
+    while (Astepper.getState() || millis() - tmr < 100)
+      Astepper.tick();
+    delay(del);
+    //    Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
+    //    while (Zstepper.getState() || millis() - tmr < 100)
+    //      Zstepper.tick();
+    //        delay(500);
+    Zstepper.setTarget(MasOfActionSteps[MainIndex][1] - CUBE_HEIGHT_S * stepInmm);
+    while (Zstepper.tick())
+      Zstepper.tick();
+    delay(200);
+    
+    if(MasOfActionSteps[MainIndex][3] == ServY[1])
+      for(int i = ServX[0]; i > MasOfActionSteps[MainIndex][2]; i--) {
+        ServoX.write(i);
+        delay(20);
       }
-
-      Zstepper.setTarget(MasOfActionSteps[MainIndex][1] - CUBE_HEIGHT_B * stepInmm);
-      while (Zstepper.tick())
-        Zstepper.tick();
-
+    for(int i = MasOfActionSteps[MainIndex - 1][4]; i > ServZ[0]; i++) {
+      ServoZ.write(i);
+      delay(20);
+    }
+    ServoZ.write(ServZ[0]);
+    delay(100);
+    for(int i = ServZ[0]; i > MasOfActionSteps[MainIndex][4]; i--) {
+      ServoZ.write(i);
+      delay(20);
+    }
+//    int pos = 0;
+//    for (pos = ServZ[0]; pos <= MasOfActionSteps[MainIndex][4]; pos -= 1) {
+//      ServoZ.write(pos);
+//      delay(10);
+//    }
+    /*
       static uint32_t Servtmr = millis();
       ServoZ.write(MasOfActionSteps[MainIndex][4]);
       while (millis() - Servtmr < 100)
-        delay(1);
+      delay(1);*/
+    delay(del);
 
-      Zstepper.setTarget(MasOfActionSteps[MainIndex][1]);
-      while (Zstepper.tick())
-          Zstepper.tick();
-
-      MainIndex++;
-    }*/
+    Zstepper.setTarget(200 * stepInmm);
+    while (Zstepper.tick())
+      Zstepper.tick();
+    delay(del);
+    MainIndex++;
+    //    delay(500);
+  }
+  else if (F) {
+    Zstepper.setTarget(200 * stepInmm);
+    Astepper.setTarget(0);
+    while (Zstepper.getState() || Astepper.getState()) {
+      Zstepper.tick();
+      Astepper.tick();
+    }
+    GoHome();
+    F = 0;
+  }
   /*
       static bool dir;
       if (!Astepper.tick()) {
@@ -235,22 +314,25 @@ void search_spiers(byte outputMas[3][3]) {
       if (outputMas[i + 1][j] == 0 and outputMas[i][j] != 0) {
         if (countSpiers > i) {
           countSpiers = i;
-          indexDom = j;
         }
-        //Serial.println(outputMas[i][j]);
-        //outputMas[i][j] = outputMas[i][j] + 5;
-        spiersMas[countSpiersNice] = outputMas[i][j];
-        countSpiersNice++;
+        outputMas[i][j] = outputMas[i][j] + 5;
       }
       else if (i == 1 and outputMas[i + 1][j] != 0) {
         //Serial.println(outputMas[i + 1][j]);
-        //outputMas[i][j] = outputMas[i][j] + 5;
-        spiersMas[countSpiersNice] = outputMas[i + 1][j];
-        countSpiersNice++;
+        outputMas[i+1][j] = outputMas[i+1][j] + 5;
       }
     }
   }
-  spiersMas[3] = indexDom;
+  for (byte i = 0; i <= 2; i++) {
+    for (byte j = 0; j <= 2; j++) {
+      if (outputMas[i][j] > 5){
+        if (countSpiersNice == 0) indexDom = j;
+        spiersMas[countSpiersNice] = outputMas[i][j];
+        countSpiersNice++;
+        spiersMas[3] = indexDom;
+      }
+    }
+  }
 }
 
 
@@ -286,39 +368,44 @@ byte lord_of_the_builders_brotherhood_array() { //153221534
     if (Serial.available() > 0) {
       String data = Serial.readStringUntil('\n');
       long longdata = data.toInt();
-      Serial.println(longdata);
+      //      Serial.println(longdata);
       if (longdata > 100) {
         int floorOne = int(longdata / 1000000);
         int floorTwo = int(longdata / 1000 % 1000);
         int floorThree = int(longdata % 1000);
         build_matrix(floorOne, floorTwo, floorThree);
+        break;
       }
       else {
-        byte typeE = byte(longdata % 10);
-        byte typeW = byte((longdata - longdata % 10) / 10);
+        int typeE = longdata % 10;
+        byte typeW = byte(longdata / 10);
         count++;
         switch (count) {
           case 1:
-            inputMas[0][0] = typeE;
+            inputMas[0][0] = byte(typeE);
             inputMas[0][1] = typeW + 5;
             break;
           case 2:
-            inputMas[1][0] = typeE;
+            inputMas[1][0] = byte(typeE);
             inputMas[1][1] = typeW + 5;
+            Serial.println(inputMas[1][0]);
+            Serial.println(byte(typeE));
+            Serial.println(typeE);
             break;
           case 3:
-            inputMas[2][0] = typeE;
+            inputMas[2][0] = byte(typeE);
             inputMas[2][1] = typeW + 5;
             break;
           case 4:
-            inputMas[3][0] = typeE;
+            inputMas[3][0] = byte(typeE);
             inputMas[3][1] = typeW + 5;
             break;
           case 5:
-            inputMas[4][0] = typeE;
+            inputMas[4][0] = byte(typeE);
             inputMas[4][1] = typeW + 5;
             break;
         }
+        break;
       }
     }
   }
@@ -420,20 +507,9 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
             inputMas[i][0] = 0;
           }
           else if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] != 0) {
-            //Serial.println("YEEEEEEEEEEEEEEEEEEP");
             for (byte b = 0; b <= 4; b++) { // перетаскивание шпилей
               for (byte k = 0; k <= 1; k++) {
-                /*Serial.println("ERROR LINE");
-                  Serial.print("stopMas[k] - ");
-                  Serial.println(stopMas[k]);
-                  Serial.print("b - ");
-                  Serial.println(b);
-                  Serial.print("inputMas[b][0] - ");
-                  Serial.println(inputMas[b][0]);
-                  Serial.print("inputMas[b][1] - ");
-                  Serial.println(inputMas[b][1]);8*/
                 if (stopMas[k] != b and inputMas[b][0] != 0 and inputMas[b][1] == 0) {
-                  //Serial.println("NOOOOOOOOOOOOOOOOOOOPE");
                   array_generator(1, 0, i, CUBE_HIGHT_B, 0, b, CUBE_HIGHT_B);
                   inputMas[b][1] = inputMas[i][1];
                   inputMas[i][1] = 0;
@@ -500,7 +576,8 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
             //Serial.print("inputMas[i][0] - ");
             //Serial.println(inputMas[i][0]);
             if (stupidSpiersNum2[j][0] == inputMas[i][0]) {
-              array_generator(0, 0, i, CUBE_HIGHT_B, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
+              array_generator(0, 0, i, 0, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
+              inputMas[i][0] = 0;
               //failSimulation[1][stupidSpiers[j][1]];
             }
           }
@@ -545,12 +622,12 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 
         if (errorFlag) {
           return 1;
-        }
+        } 
         else {
           array_generator(1, 1, spiersMas[3], 0, 1, saveAss, 2 * CUBE_HIGHT_B + CUBE_HIGHT_S);
 
           for (byte i = 0; i <= 4; i++) {
-            if (outputMas[spiersMas[3]][0] == inputMas[i][0]) {
+            if (inputMas[i][0] > 0 and inputMas[i][0] < 6) {
               array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
             }
 
@@ -565,7 +642,7 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         for (byte i = 0; i <= 4; i++) {
           for (byte j = 0; j <= 1; j++) {
             if (stupidSpiersNum2[j][0] == inputMas[i][0]) {
-              array_generator(0, 0, i, CUBE_HIGHT_B, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
+              array_generator(0, 0, i, 0, 1, stupidSpiersNum2[j][1], CUBE_HIGHT_B);
 
             }
           }
@@ -801,8 +878,25 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
 //---------------FUNCTION MANIPULATOR---------------
 
 
+void Fix() {
+  int i = 0;
+  while (finalMas[i][0] != 99) {
+    if (finalMas[i][0] == 0) {
+      finalMas[i][3] += CUBE_HEIGHT_B;
+      finalMas[i][6] += CUBE_HEIGHT_B;
+      finalMas[i][0] = 1;
+    }
+    else if (finalMas[i][0] == 1) {
+      finalMas[i][3] += CUBE_HEIGHT_S;
+      finalMas[i][6] += CUBE_HEIGHT_S;
+      finalMas[i][0] = 0;
+    }
+    i++;
+  }
+}
+
 void GoHome() {
-  int porog = 870;
+  int porog = 800;
   Astepper.setRunMode(KEEP_SPEED);
   Astepper.setSpeed(-100);
 
@@ -827,23 +921,23 @@ void GoHome() {
   while (Astepper.getState())
     Astepper.tick();
   Astepper.setRunMode(KEEP_SPEED);
-  Astepper.setSpeed(-600);
+  Astepper.setSpeed(-400);
   while (analogRead(A_AXIS_LIMIT_SWITCH_PIN) > porog)
     Astepper.tick();
   Astepper.reset();
   Astepper.setRunMode(FOLLOW_POS);
-  Astepper.setTarget(150);
+  Astepper.setTarget(200);
   while (Astepper.getState())
     Astepper.tick();
   Astepper.setRunMode(KEEP_SPEED);
-  Astepper.setSpeed(-100);
+  Astepper.setSpeed(-150);
   while (analogRead(A_AXIS_LIMIT_SWITCH_PIN) > porog)
     Astepper.tick();
   Astepper.reset();
 
   Astepper.setRunMode(FOLLOW_POS);
   Zstepper.setRunMode(FOLLOW_POS);
-  Astepper.setCurrent(-200*3);
+  Astepper.setCurrent(-200 * 3 + 30);
   Zstepper.setCurrent(1230);
 
   ServoX.write(ServX[0]);
@@ -865,28 +959,25 @@ void ZeroFunktion() {
   }
 
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  //  lord_of_the_builders_brotherhood_array();
+  lord_of_the_builders_brotherhood_array();
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-    delay(1);
 
-  Zstepper.setTarget(200);
-  while (Zstepper.getState())
-    Zstepper.tick();
   ServoZZ.write(ServZZ[1]);
   delay(100);
   for (int i = 0; i < 5; i++) {
     Astepper.setTarget(rotate(180 - 70 + 30 * i));
     while (Astepper.getState())
       Astepper.tick();
+    if (i == 0) {
+      Zstepper.setTarget(200);
+      while (Zstepper.getState())
+        Zstepper.tick();
+    }
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    //    lord_of_the_builders_brotherhood_array();
+    lord_of_the_builders_brotherhood_array();
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-      delay(1);
   }
 }
-
 
 void PointG() {
 
@@ -919,39 +1010,38 @@ void PointG() {
   ///////               (type, PlaceIn, xIn, yIn, PlaceOut, xOut, yOut)
 }
 
-
 void MoveToFinish(int Indx, int MMy, int T) {
-  int angle = 23;
+  int angle = 22;
+  int smeshenie = 180;
   switch (Indx) {
     case 0:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(180 - angle);
+      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie + angle);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[3];
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] + ServY[2];
       break;
     case 1:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(180);
-      MasOfActionSteps[IndexOfActionSteps][2] = ServX[2];
+      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - 2);
+      MasOfActionSteps[IndexOfActionSteps][2] = ServX[2] + 10;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
       break;
     case 2:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(180 + angle);
-      MasOfActionSteps[IndexOfActionSteps][2] = ServX[3];
-      MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] - ServY[2];
+      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - angle - 7);
+      MasOfActionSteps[IndexOfActionSteps][2] = ServX[3] + 15;
+      MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] - ServY[2] - 3;
       break;
   }
   MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap);
   if (T)
-    MasOfActionSteps[IndexOfActionSteps][1] += MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
+    MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
 }
-
 
 void MoveToStart(int Indx, int MMy, int T) {
 
-  MasOfActionSteps[IndexOfActionSteps][0] = rotate(30 * Indx - 60);
+  MasOfActionSteps[IndexOfActionSteps][0] = rotate((30 * Indx) - 59 - Indx);
 
   MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap);
   if (T)
-    MasOfActionSteps[IndexOfActionSteps][1] += MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
+    MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
   MasOfActionSteps[IndexOfActionSteps][2] = ServX[1];
   MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
 }
