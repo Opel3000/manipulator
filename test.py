@@ -11,8 +11,8 @@ start_time = time.time()
 # blue - 4
 # black - 5
 
-
-ser = serial.Serial('/dev/ttyACM0', 9600)
+# ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/ttyACM1', 9600)
 
 building_map = []
 
@@ -27,9 +27,9 @@ cameraPort = 0
 
 
 def watchimg(img):
-    cv2.imshow('img', img)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+   #  cv2.imshow('img', img)
+   #  cv2.waitKey()
+   #  cv2.destroyAllWindows()
     pass
 
 
@@ -114,13 +114,24 @@ def materials_matrix(img):
     massmat, count, massmat_fin = [], 0, []
     segimg(img)
     
+    while True:  # по черным фигурам
+        # break
+        mid_x, mid_y, ids, h, x, y, w = obrezkaMat(img, blm_min, blm_max)
+        if ids:
+            midle_x = (x+(w//2))
+            midle_y = (y+(h//2))
+            cv2.rectangle(img, (x+w, y+h), (x, y-25), (255, 255, 255), -1)
+            massmat.append([mid_x, mid_y, 5, h, w, count])
+        else:
+            break
+    
     while True:  # по синим фигурам
         # break
         mid_x, mid_y, ids, h, x, y, w = obrezkaMat(img, blu_min, blu_max)
         if ids:
             midle_x = (x+(w//2))
             midle_y = (y+(h//2))
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+            cv2.rectangle(img, (x+w, y+h), (x, y-25), (255, 255, 255), -1)
             massmat.append([mid_x, mid_y, 4, h, w, count])
         else:
             break
@@ -131,7 +142,7 @@ def materials_matrix(img):
         if ids:
             midle_x = (x+(w//2))
             midle_y = (y+(h//2))
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+            cv2.rectangle(img, (x+w, y+h), (x, y-25), (255, 255, 255), -1)
             massmat.append([mid_x, mid_y, 2, h, w, count])
         else:
             break
@@ -141,18 +152,8 @@ def materials_matrix(img):
         if ids:
             midle_x = (x+(w//2))
             midle_y = (y+(h//2))
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+            cv2.rectangle(img, (x+w, y+h), (x, y-25), (255, 255, 255), -1)
             massmat.append([mid_x, mid_y, 3, h, w, count])
-        else:
-            break
-    while True:  # по черным фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezkaMat(img, blm_min, blm_max)
-        if ids:
-            midle_x = (x+(w//2))
-            midle_y = (y+(h//2))
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmat.append([mid_x, mid_y, 5, h, w, count])
         else:
             break
     
@@ -162,7 +163,7 @@ def materials_matrix(img):
         if ids:
             midle_x = (x+(w//2))
             midle_y = (y+(h//2))
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
+            cv2.rectangle(img, (x+w, y+h), (x, y-25), (255, 255, 255), -1)
             massmat.append([mid_x, mid_y, 1, h, w, count])
         else:
             break
@@ -170,8 +171,8 @@ def materials_matrix(img):
     print(massmat)
 
     if len(massmat) == 1:
-        ser.write(str(massmat[0][2]).encode('utf-8'))
-        print(str(massmat[0][2]).encode('utf-8'))
+        ser.write((str(massmat[0][2])+str(massmat[0][2])).encode('utf-8'))
+        print((str(massmat[0][2])+str(massmat[0][2])).encode('utf-8'))
     elif len(massmat) == 2:
 
         massmat.sort()
@@ -286,6 +287,7 @@ def matrix_final():
     count, massmap = -1, []
 
     segimg(img)
+
     
     while True:  # по синим фигурам
         # break
@@ -321,7 +323,7 @@ def matrix_final():
             break
 
     imghsv = img.copy()
-
+    
     while True:  # по черным фигурам
         # break
         mid_x, mid_y, ids, h, x, y, w = obrezka(img, blm_min, blm_max)
@@ -333,7 +335,7 @@ def matrix_final():
             cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
         else:
             break
-        
+    cv2.rectangle(img, (0, 0), (5, 5), (20, 20, 255), -1)
     while True:  # по красным фигурам
         # break
         mid_x, mid_y, ids, h, x, y, w = obrezka(img, red_min, red_max)
@@ -396,19 +398,22 @@ if flagBGR:
     blu_max = np.array((255, 28, 31), np.uint8)  #131, 255, 255
     
 else:
-    red_min = np.array((28, 196, 117), np.uint8)  # 142, 100, 46
+    red_min = np.array((0, 176, 104), np.uint8)  # 142, 100, 46
     red_max = np.array((179, 255, 255), np.uint8) #196, 255, 150
     
+   #  redd_min = np.array((0, 196, 37), np.uint8)  # 142, 100, 46
+   #  redd_max = np.array((49, 255, 255), np.uint8) #196, 255, 150
+    
     blm_min = np.array((0, 0, 0), np.uint8) #0, 0, 0
-    blm_max = np.array((179, 255, 45), np.uint8) #255, 255, 12
+    blm_max = np.array((179, 255, 27), np.uint8) #255, 255, 12
          
     gre_min = np.array((38, 121, 15), np.uint8)     #38, 121, 0
     gre_max = np.array((104, 255, 255), np.uint8)  #104, 255, 255
     
-    yel_min = np.array((11, 116, 125), np.uint8)  # 11, 116, 125
-    yel_max = np.array((55,200, 255), np.uint8)  # 55, 200, 255
+    yel_min = np.array((11, 116, 100), np.uint8)  # 11, 116, 125
+    yel_max = np.array((55,255, 255), np.uint8)  # 55, 200, 255
     
-    blu_min = np.array((100, 176, 41), np.uint8)  # 111, 176, 41
+    blu_min = np.array((100, 176, 16), np.uint8)  # 111, 176, 41
     blu_max = np.array((131, 255, 255), np.uint8)  #131, 255, 255
     
     
@@ -419,6 +424,7 @@ while True:
 
 while True:
     if ser.in_waiting > 0:
+        print(ser.read())
         if countVar == 0:
             matrix_final()
             building_map_fin = ""
@@ -455,12 +461,13 @@ while True:
             materials_matrix(img)
             # hsv_black_blue(imghsv)
             countVar += 1
+            if (countVar == 6):
+                countVar = 0
+                time.sleep(10)
+                building_map=[]
             watchimg(img)
             cap.release()
-        else:
-            while True:
-                if ser.in_waiting > 0:
-                    countVar = 0
+
 
 
 
