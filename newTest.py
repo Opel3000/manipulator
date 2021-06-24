@@ -9,7 +9,7 @@ import cv2
 # blue - 4
 # black - 5
 
-#ser = serial.Serial('/dev/ttyACM1', 9600)
+ser = serial.Serial('/dev/ttyACM1', 9600)
 
 cameraPort = 0
 
@@ -18,7 +18,6 @@ def watchimg(fram):
     cv2.imshow('frame', fram)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    pass
 
 
 def segimg(F):
@@ -119,7 +118,7 @@ def materials_matrix():
             massmat.append(1)
             continue
 
-    #ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
+    ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
     print((str(massmat[1])+str(massmat[0])).encode('utf-8'))
 
 
@@ -127,7 +126,7 @@ def matrix_final():
     while True:
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            #cv2.imwrite('cfin.png', frame)
+            cv2.imwrite('cfin.png', frame)
             break
 
     frame = cv2.imread('cfin.png')
@@ -147,8 +146,7 @@ def matrix_final():
 
     img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+15]
     img00 = segimg(img00)
-    watchimg(img00)
-    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+15, ]
+    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+15]
     img01 = segimg(img01)
     img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+15]
     img02 = segimg(img02)
@@ -178,35 +176,30 @@ def matrix_final():
         ids = obrezka(image, blu_min, blu_max)
         if ids:
             finalMap += "4"
-            print(4)
             continue
 
     # по зелёным фигурам
         ids= obrezka(image, gre_min, gre_max)
         if ids:
             finalMap += "2"
-            print(2)
             continue
 
     # по жёлтым фигурам
         ids = obrezka(image, yel_min, yel_max)
         if ids:
             finalMap += "3"
-            print(3)
             continue
     
     # по черным фигурам
         ids = obrezka(image, blm_min, blm_max)
         if ids:
             finalMap += "5"
-            print(5)
             continue
 
     # по красным фигурам
         ids = obrezka(image, red_min, red_max)
         if ids:
             finalMap += "1"
-            print(1)
             continue
 
         finalMap += "0"
@@ -235,29 +228,28 @@ blu_max = np.array((131, 255, 255), np.uint8)  #131, 255, 255
     
 
 while True:
-    #if ser.in_waiting > 0:
+    if ser.in_waiting > 0:
         cap = cv2.VideoCapture(cameraPort)
         break
 
 while True:
-    #if ser.in_waiting > 0:
+    if ser.in_waiting > 0:
         if countVar == 0:
             building_map_fin = matrix_final()
 
             print(building_map_fin)
 
-            #ser.write(building_map_fin.encode('utf-8'))
+            ser.write(building_map_fin.encode('utf-8'))
             countVar += 1
 
         elif (countVar > 0) and countVar < 6:
             while True:
                 _, frame = cap.read()
                 if frame[0][0][0] != 0:
-                    #cv2.imwrite('c'+str(countVar)+'.png', frame)
+                    cv2.imwrite('c'+str(countVar)+'.png', frame)
                     break
             img = cv2.imread('c'+str(countVar)+'.png')
             materials_matrix()
             countVar += 1
             if (countVar == 6):
-                #countVar = 0
-                exit(0)
+                countVar = 0
