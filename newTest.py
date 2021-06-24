@@ -1,8 +1,6 @@
 import numpy as np
 import serial
 import cv2
-import time
-start_time = time.time()
 
 
 # red - 1
@@ -13,84 +11,65 @@ start_time = time.time()
 
 ser = serial.Serial('/dev/ttyACM1', 9600)
 
-building_map = []
-
-pixel_x = 640
-
 cameraPort = 0
 
 
-def watchimg(img):
-   #  cv2.imshow('img', img)
+def watchimg(fram):
+   #  cv2.imshow('frame', fram)
    #  cv2.waitKey()
    #  cv2.destroyAllWindows()
     pass
 
 
-def segimg(img):
-    pixel = 4
-    if flagBGR:
+def segimg(F):
+
+    pixel = 2
         
-        cv2.rectangle(img, (0, 0), (pixel, pixel), (25, 30, 255), -1)
-        cv2.rectangle(img, (pixel, 0), (pixel*2, pixel), (0, 0, 0), -1)
-        cv2.rectangle(img, (pixel*2, 0), (pixel*3, pixel), (70, 255, 27), -1)
-        cv2.rectangle(img, (pixel*3, 0), (pixel*4, pixel), (60, 255, 204), -1)
-        cv2.rectangle(img, (pixel*4, 0), (pixel*5, pixel), (255, 28, 31), -1)
-        
-    else:
-        
-        cv2.rectangle(img, (0, 0), (pixel, pixel), (20, 20, 255), -1)
-        cv2.rectangle(img, (pixel, 0), (pixel*2, pixel), (0, 0, 0), -1)
-        cv2.rectangle(img, (pixel*2, 0), (pixel*3, pixel), (23, 255, 27), -1)
-        cv2.rectangle(img, (pixel*3, 0), (pixel*4, pixel), (60, 255, 204), -1)
-        cv2.rectangle(img, (pixel*4, 0), (pixel*5, pixel), (255, 28, 31), -1)
+    cv2.rectangle(F, (0, 0), (pixel, pixel), (20, 20, 255), -1)
+    cv2.rectangle(F, (pixel, 0), (pixel*2, pixel), (0, 0, 0), -1)
+    cv2.rectangle(F, (pixel*2, 0), (pixel*3, pixel), (23, 255, 27), -1)
+    cv2.rectangle(F, (pixel*3, 0), (pixel*4, pixel), (60, 255, 204), -1)
+    cv2.rectangle(F, (pixel*4, 0), (pixel*5, pixel), (255, 28, 31), -1)
+
+    return F
     
     
 def obrezka(F, hsv_min, hsv_max):
+
     F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
 
     F = cv2.inRange(F, hsv_min, hsv_max)
 
-    watchimg(F)
-
-    x, y, w, h = 0, 0, 0, 0
+    w, h = 0, 0, 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = contours[0]
     if contours:
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        (x, y, w, h) = cv2.boundingRect(contours[0])
-        F = F[y:y + h, x:x + w]
-        S = np.sum(F[1:len(F), 1:len(F[0])]) // 255
+        (_, _, w, h) = cv2.boundingRect(contours[0])
 
-        if h > 20 and w > 20 and S > 700:
+        if h > 10 and w > 10:
             flagError = True
         else:
             flagError = False
-            
-        midle_x = (x+(w//2))
-        midle_y = (y+(h//2))
+    
 
-    return midle_x, midle_y, flagError, h, x, y, w
+    return flagError
 
 
 def obrezkaMat(F, hsv_min, hsv_max):
-    if not(flagBGR):
-        F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
+
+    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
         
     F = cv2.inRange(F, hsv_min, hsv_max)
     
-    watchimg(F)
-    
-    x, y, w, h = 0, 0, 0, 0
+    _, _, w, h = 0, 0, 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = contours[0]
     if contours:
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        (x, y, w, h) = cv2.boundingRect(contours[0])
-        F = F[y:y + h, x:x + w]
-        S = np.sum(F[1:len(F), 1:len(F[0])]) // 255
+        (_, _, w, h) = cv2.boundingRect(contours[0])
 
-        if h > 75 and (w > 75):
+        if h > 10 and (w > 10):
             flagError = True
         else:
             flagError = False
@@ -104,9 +83,9 @@ def materials_matrix():
     massmat = []
 
     imglow = img[228:248, 188:208]
-    segimg(imglow)
+    imglow = segimg(imglow)
     imghight = img[205:225, 335:355]
-    segimg(imghight)
+    imglow = segimg(imghight)
     checkMas = [imglow, imghight]
     
     for image in checkMas:
@@ -114,201 +93,124 @@ def materials_matrix():
         ids = obrezkaMat(image, blm_min, blm_max)
         if ids:
             massmat.append(5)
+            continue
     
     # по синим фигурам
         ids = obrezkaMat(image, blu_min, blu_max)
         if ids:
             massmat.append(4)
+            continue
 
     # по зелёным фигурам
         ids = obrezkaMat(image, gre_min, gre_max)
         if ids:
             massmat.append(2)
+            continue
 
     # по жёлтым фигурам
         ids = obrezkaMat(image, yel_min, yel_max)
         if ids:
             massmat.append(3)
+            continue
     
     # по красным фигурам
         ids = obrezkaMat(image, red_min, red_max)
         if ids:
             massmat.append(1)
+            continue
 
     ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
     print((str(massmat[1])+str(massmat[0])).encode('utf-8'))
 
 
-def build_matrix(mass_one):
-    mass_one_fin = []
-    min_x, max_x = 999, -1
-    if len(mass_one) == 3:
-        for mas in mass_one:
-            if mas[0] < min_x:
-                min_x = mas[0]
-                index_min_x = mass_one.index(mas)
-
-        mass_one_fin.append(mass_one[index_min_x][2])
-
-        for mas in mass_one:
-            if mas[0] > max_x:
-                max_x = mas[0]
-                index_max_x = mass_one.index(mas)
-                maxmas = mas
-
-        for mas in mass_one:
-            if mass_one.index(mas) != index_min_x and mass_one.index(mas) != index_max_x:
-                mass_one_fin.append(mas[2])
-
-        mass_one_fin.append(maxmas[2])
-
-    elif len(mass_one) == 2:
-        mass_one_fin = [0, 0, 0]
-        min_x = min(mass_one[0][0], mass_one[1][0])
-        max_x = max(mass_one[0][0], mass_one[1][0])
-
-        if min_x < pixel_x // 2 - (mass_one[0][4]*0.4):
-            for mas in mass_one:
-                if min_x == mas[0]:
-                    mass_one_fin[0] = mas[2]
-        else:
-            for mas in mass_one:
-                if min_x == mas[0]:
-                    mass_one_fin[1] = mas[2]
-
-        if max_x > pixel_x // 2 + (mass_one[0][4]*0.4):
-            for mas in mass_one:
-                if max_x == mas[0]:
-                    mass_one_fin[2] = mas[2]
-        else:
-            for mas in mass_one:
-                if max_x == mas[0]:
-                    mass_one_fin[1] = mas[2]
-
-    elif len(mass_one) == 1:
-        if mass_one[0][0] < pixel_x // 2 - (mass_one[0][4]*0.4):
-            mass_one_fin = [mass_one[0][2], 0, 0]
-        elif mass_one[0][0] > pixel_x // 2 + (mass_one[0][4]*0.4):
-            mass_one_fin = [0, 0, mass_one[0][2]]
-        else:
-            mass_one_fin = [0, mass_one[0][2], 0]
-
-    elif len(mass_one) == 0:
-        mass_one_fin = [0, 0, 0]
-
-    building_map.append(mass_one_fin)
-
-
 def matrix_final():
     while True:
-        ret, frame = cap.read()
+        _, frame = cap.read()
         if frame[0][0][0] != 0:
             cv2.imwrite('cfin.png', frame)
-            #cv2.waitKey(0)
-            cv2.destroyAllWindows()
             break
 
-    img = cv2.imread('cfin.png')
+    frame = cv2.imread('cfin.png')
 
     M = cv2.getRotationMatrix2D((640 // 2, 480 // 2), 82, 1.0)
-    img = cv2.warpAffine(img, M, (640, 480))
+    img = cv2.warpAffine(frame, M, (640, 480))
 
-    watchimg(img)
+    floorOne = 248
+    floorTwo = 331
+    floorThree = 432
 
-    global imghsv
-    count, massmap = -1, []
+    pillarOne = 210
+    pillarTwo = 296
+    pillarThree = 385
 
-    segimg(img)
+    finalMap = ""
 
-    
-    while True:  # по синим фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezka(img, blu_min, blu_max)
+    img00 = img[pillarOne:pillarOne+15, floorOne:floorOne+15]
+    img00 = segimg(img00)
+    img01 = img[pillarTwo:pillarTwo+15, floorOne:floorOne+15]
+    img01 = segimg(img01)
+    img02 = img[pillarThree:pillarThree+15, floorOne:floorOne+15]
+    img02 = segimg(img02)
+
+    img10 = img[pillarOne:pillarOne+15, floorTwo:floorTwo+15]
+    img10 = segimg(img10)
+    img11 = img[pillarTwo:pillarTwo+15, floorTwo:floorTwo+15]
+    img11 = segimg(img11)
+    img12 = img[pillarThree:pillarThree+15, floorTwo:floorTwo+15]
+    img12 = segimg(img12)
+
+    img20 = img[pillarOne:pillarOne+15, floorThree:floorThree+15]
+    img20 = segimg(img20)
+    img21 = img[pillarTwo:pillarTwo+15, floorThree:floorThree+15]
+    img21 = segimg(img21)
+    img22 = img[pillarThree:pillarThree+15, floorThree:floorThree+15]
+    img22 = segimg(img22)
+
+    checkMas = [img00, img01, img02,
+                img10, img11, img12,
+                img20, img21, img22]
+
+
+    for image in checkMas:
+
+    # по синим фигурам
+        ids = obrezka(image, blu_min, blu_max)
         if ids:
-             count += 1
-             cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-             massmap.append([mid_x, mid_y, 4, h, w, count])
-             print(4)
-        else:
-            break
+            finalMap += "4"
+            print(4)
+            continue
 
-    while True:  # по зелёным фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezka(img, gre_min, gre_max)
+    # по зелёным фигурам
+        ids= obrezka(image, gre_min, gre_max)
         if ids:
-            count += 1
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmap.append([mid_x, mid_y, 2, h, w, count])
+            finalMap += "2"
             print(2)
-        else:
-            break
+            continue
 
-    while True:  # по жёлтым фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezka(img, yel_min, yel_max)
+    # по жёлтым фигурам
+        ids = obrezka(image, yel_min, yel_max)
         if ids:
-            count += 1
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmap.append([mid_x, mid_y, 3, h, w, count])
+            finalMap += "3"
             print(3)
-        else:
-            break
-
-    imghsv = img.copy()
+            continue
     
-    while True:  # по черным фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezka(img, blm_min, blm_max)
+    # по черным фигурам
+        ids = obrezka(image, blm_min, blm_max)
         if ids:
-            if h < 300 and w < 300:
-                count += 1
-                massmap.append([mid_x, mid_y, 5, h, w, count])
-                print(5)
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-        else:
-            break
-    cv2.rectangle(img, (0, 0), (5, 5), (20, 20, 255), -1)
-    while True:  # по красным фигурам
-        # break
-        mid_x, mid_y, ids, h, x, y, w = obrezka(img, red_min, red_max)
+            finalMap += "5"
+            print(5)
+            continue
+
+    # по красным фигурам
+        ids = obrezka(image, red_min, red_max)
         if ids:
-            count += 1
-            cv2.rectangle(img, (x+w, y+h), (x, y), (255, 255, 255), -1)
-            massmap.append([mid_x, mid_y, 1, h, w, count])
+            finalMap += "1"
             print(1)
-        else:
-            break
-    print(massmap)
+            continue
 
-    min_y = 999999
-
-    for mas in massmap:
-        if mas[1] < min_y:
-            min_y = mas[1]
-
-    mass_one = []
-
-    for mas in massmap:
-        if not(mas[1] > min_y+30):
-            mass_one.append(mas)
-
-    build_matrix(mass_one)
-
-    mass_two = []
-
-    for mas in massmap:
-        if (mas[1] > min_y + 0.5 * massmap[0][3]) and (mas[1] < min_y + massmap[0][3] * 1.7):
-            mass_two.append(mas)
-
-    build_matrix(mass_two)
-
-    mass_three = []
-
-    for mas in massmap:
-        if not(mas[1] < min_y + 1.7 * massmap[0][3]):
-            mass_three.append(mas)
-
-    build_matrix(mass_three)
+        finalMap += "0"
+    
+    return finalMap
 
 
 countVar = 0
@@ -339,28 +241,21 @@ while True:
 while True:
     if ser.in_waiting > 0:
         if countVar == 0:
-            matrix_final()
-            building_map_fin = ""
-
-            for mas in building_map:
-                for i in mas:
-                    building_map_fin += str(i)
+            building_map_fin = matrix_final()
 
             print(building_map_fin)
 
-            ser.write(building_map_fin.encode('utf-8'))  # building_map
+            ser.write(building_map_fin.encode('utf-8'))
             countVar += 1
 
         elif (countVar > 0) and countVar < 6:
             while True:
-                ret, frame = cap.read()
+                _, frame = cap.read()
                 if frame[0][0][0] != 0:
                     cv2.imwrite('c'+str(countVar)+'.png', frame)
-                    cv2.destroyAllWindows()
                     break
             img = cv2.imread('c'+str(countVar)+'.png')
             materials_matrix()
             countVar += 1
             if (countVar == 6):
                 countVar = 0
-                building_map=[]
