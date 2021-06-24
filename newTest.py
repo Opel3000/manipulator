@@ -9,15 +9,15 @@ import cv2
 # blue - 4
 # black - 5
 
-ser = serial.Serial('/dev/ttyACM1', 9600)
+#ser = serial.Serial('/dev/ttyACM1', 9600)
 
 cameraPort = 0
 
 
 def watchimg(fram):
-   #  cv2.imshow('frame', fram)
-   #  cv2.waitKey()
-   #  cv2.destroyAllWindows()
+    cv2.imshow('frame', fram)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     pass
 
 
@@ -40,7 +40,7 @@ def obrezka(F, hsv_min, hsv_max):
 
     F = cv2.inRange(F, hsv_min, hsv_max)
 
-    w, h = 0, 0, 0, 0
+    w, h = 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = contours[0]
     if contours:
@@ -62,7 +62,7 @@ def obrezkaMat(F, hsv_min, hsv_max):
         
     F = cv2.inRange(F, hsv_min, hsv_max)
     
-    _, _, w, h = 0, 0, 0, 0
+    w, h = 0, 0
     contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = contours[0]
     if contours:
@@ -85,7 +85,7 @@ def materials_matrix():
     imglow = img[228:248, 188:208]
     imglow = segimg(imglow)
     imghight = img[205:225, 335:355]
-    imglow = segimg(imghight)
+    imghight = segimg(imghight)
     checkMas = [imglow, imghight]
     
     for image in checkMas:
@@ -119,7 +119,7 @@ def materials_matrix():
             massmat.append(1)
             continue
 
-    ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
+    #ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
     print((str(massmat[1])+str(massmat[0])).encode('utf-8'))
 
 
@@ -127,7 +127,7 @@ def matrix_final():
     while True:
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            cv2.imwrite('cfin.png', frame)
+            #cv2.imwrite('cfin.png', frame)
             break
 
     frame = cv2.imread('cfin.png')
@@ -145,25 +145,26 @@ def matrix_final():
 
     finalMap = ""
 
-    img00 = img[pillarOne:pillarOne+15, floorOne:floorOne+15]
+    img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+15]
     img00 = segimg(img00)
-    img01 = img[pillarTwo:pillarTwo+15, floorOne:floorOne+15]
+    watchimg(img00)
+    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+15, ]
     img01 = segimg(img01)
-    img02 = img[pillarThree:pillarThree+15, floorOne:floorOne+15]
+    img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+15]
     img02 = segimg(img02)
 
-    img10 = img[pillarOne:pillarOne+15, floorTwo:floorTwo+15]
+    img10 = img[floorTwo:floorTwo+15, pillarOne:pillarOne+15]
     img10 = segimg(img10)
-    img11 = img[pillarTwo:pillarTwo+15, floorTwo:floorTwo+15]
+    img11 = img[floorTwo:floorTwo+15, pillarTwo:pillarTwo+15]
     img11 = segimg(img11)
-    img12 = img[pillarThree:pillarThree+15, floorTwo:floorTwo+15]
+    img12 = img[floorTwo:floorTwo+15, pillarThree:pillarThree+15]
     img12 = segimg(img12)
 
-    img20 = img[pillarOne:pillarOne+15, floorThree:floorThree+15]
+    img20 = img[floorThree:floorThree+15, pillarOne:pillarOne+15]
     img20 = segimg(img20)
-    img21 = img[pillarTwo:pillarTwo+15, floorThree:floorThree+15]
+    img21 = img[floorThree:floorThree+15, pillarTwo:pillarTwo+15]
     img21 = segimg(img21)
-    img22 = img[pillarThree:pillarThree+15, floorThree:floorThree+15]
+    img22 = img[floorThree:floorThree+15, pillarThree:pillarThree+15]
     img22 = segimg(img22)
 
     checkMas = [img00, img01, img02,
@@ -234,28 +235,29 @@ blu_max = np.array((131, 255, 255), np.uint8)  #131, 255, 255
     
 
 while True:
-    if ser.in_waiting > 0:
+    #if ser.in_waiting > 0:
         cap = cv2.VideoCapture(cameraPort)
         break
 
 while True:
-    if ser.in_waiting > 0:
+    #if ser.in_waiting > 0:
         if countVar == 0:
             building_map_fin = matrix_final()
 
             print(building_map_fin)
 
-            ser.write(building_map_fin.encode('utf-8'))
+            #ser.write(building_map_fin.encode('utf-8'))
             countVar += 1
 
         elif (countVar > 0) and countVar < 6:
             while True:
                 _, frame = cap.read()
                 if frame[0][0][0] != 0:
-                    cv2.imwrite('c'+str(countVar)+'.png', frame)
+                    #cv2.imwrite('c'+str(countVar)+'.png', frame)
                     break
             img = cv2.imread('c'+str(countVar)+'.png')
             materials_matrix()
             countVar += 1
             if (countVar == 6):
-                countVar = 0
+                #countVar = 0
+                exit(0)
