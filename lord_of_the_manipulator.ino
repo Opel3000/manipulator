@@ -59,10 +59,23 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
       }
     }
 
+
+    byte stupidSpiers[2];
+    byte countSS = 0;
+
+
+    for (byte i = 0; i <= 4; i++) {
+      if (inputMas[i][1] != 0) {
+        stupidSpiers[countSS] = i;
+        countSS++;
+      }
+    }
+
     //проверка 1 слоя на этажи и перенос их
 
     byte plaseTwoSS;
     bool flagErrorVar2 = false;
+    bool flagFix = false
 
     for (byte j = 0; j <= 2; j++) {
       if (outputMas[0][j] < 6 and outputMas[0][j] != 0 and j != spiersMas[3]) {
@@ -70,7 +83,10 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
           flagErrorVar2 = false;
           if (outputMas[0][j] == inputMas[i][0] and inputMas[i][1] == 0) {
             array_generator(0, 0, i, 0, 1, j, 0);
-            plaseTwoSS = i;
+            if flagFix == false:
+                array_generator(1, 0, stupidSpiers[0], CUBE_HIGHT_B, 0, i, 0);
+                array_generator(1, 0, stupidSpiers[1], CUBE_HIGHT_B, 0, i, CUBE_HIGHT_S);
+                flagFix = true
             failSimulation[0][j] = inputMas[i][0];
             inputMas[i][0] = 0;
           }
@@ -90,6 +106,10 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
             }
 
             array_generator(0, 0, i, 0, 1, j, 0); //перенос этажей
+            if flagFix == false:
+                array_generator(1, 0, stupidSpiers[0], CUBE_HIGHT_B, 0, i, 0);
+                array_generator(1, 0, stupidSpiers[1], CUBE_HIGHT_B, 0, i, CUBE_HIGHT_S);
+                flagFix = true
             failSimulation[0][j] = inputMas[i][0];
             plaseTwoSS = i;
             inputMas[i][0] = 0;
@@ -97,20 +117,6 @@ byte lord_of_the_builders_two_arrays(byte inputMas[5][2], byte outputMas[3][3]) 
         }
       }
     }
-
-    byte stupidSpiers[2];
-    byte countSS = 0;
-
-
-    for (byte i = 0; i <= 4; i++) {
-      if (inputMas[i][1] != 0) {
-        stupidSpiers[countSS] = i;
-        countSS++;
-      }
-    }
-
-    array_generator(1, 0, stupidSpiers[0], CUBE_HIGHT_B, 0, plaseTwoSS, 0);
-    array_generator(1, 0, stupidSpiers[1], CUBE_HIGHT_B, 0, plaseTwoSS, CUBE_HIGHT_S);
 
     if (flagNothing) {
 
