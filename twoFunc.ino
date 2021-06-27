@@ -5,8 +5,8 @@ byte finalMas[17][7];
 #define CUBE_HIGHT_S 31
 
 byte outputMas[3][3] = {{5, 4, 3}, {3, 1, 2}, {0, 2, 4}};
-byte inputMas[5][2] = {{5, 7}, {1, 10}, {2, 8}, {4, 6}, {3, 9}};
-byte spiersMas[3];
+byte inputMas[5][2] = {{5, 10}, {1, 7}, {2, 8}, {4, 6}, {3, 9}};
+byte spiersMas[4] = {0, 0, 0, 0};
 byte countStep = 0;
 byte count = 0;
 
@@ -16,7 +16,7 @@ void setup() {
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 7; j++) {
       Serial.print(int(finalMas[i][j]));
-      Serial.print("  ");
+      Serial.print("--");
     }
     Serial.println();
   }
@@ -143,15 +143,6 @@ void lord_of_the_builders_two_arrays() {
   byte spiersInMainZone[2] = {0, 0};
 
 
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      Serial.print(outputMas[i][j]);
-      Serial.print("  ");
-    }
-    Serial.println();
-  }
-  Serial.println("/////////////////");
-
   //ищем бесполезные шпили
   //  for (byte i = 0; i <= 4; i++) {
   //    for (byte j = 0; j <= 2; j++) {
@@ -221,40 +212,40 @@ void lord_of_the_builders_two_arrays() {
       else if (inputMas[i][1] == spiersMas[1] or inputMas[i][1] == spiersMas[2]) { //если на этаже шпили, которые используются в постройке
         byte spiersForSpiers[2] = {0, 0};
 
-        Serial.println("2");
-        Serial.println(spiersMas[3]);
 
         for (byte j = 0; j <= 4; j++) {
           if (inputMas[j][1] == spiersMas[0]) {
             array_generator(1, 0, i, CUBE_HIGHT_B, 0, j, CUBE_HIGHT_B + CUBE_HIGHT_S);
-            spiersInMainZone[1] = inputMas[j][1];
+            spiersInMainZone[1] = inputMas[i][1];
+            inputMas[i][1] = 0;
           }
-          else
+          else {
             continue;
-          Serial.println(spiersMas[3]);
-          spiersForSpiers[0] = inputMas[i][1];
-          spiersForSpiers[1] = inputMas[j][1];
+          }
 
-          Serial.println(spiersMas[3]);
 
           array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
 
           array_generator(2, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B);
+          spiersInMainZone[0] = inputMas[j][1];
+          inputMas[j][1] = 0;
 
           break;
         }
 
         for (byte j = 0; j <= 4; j++) {
-          for (byte L = 0; L <= 1; L++) {
-            if (inputMas[j][1] != spiersForSpiers[L])
+          for (byte L = 0; L <= 2; L++) {
+            if (inputMas[j][1] == spiersMas[L]) {
               array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B + 2 * CUBE_HIGHT_S);
-            spiersInMainZone[0] = inputMas[j][1];
-            break;
+              spiersInMainZone[0] = inputMas[j][1];
+              inputMas[j][1] = 0;
+              break;
+            }
           }
         }
 
         for (byte j = 0; j <= 4; j++) {
-          if (inputMas[j][1] != spiersMas[0] and inputMas[j][1] != spiersMas[1] and inputMas[j][1] != spiersMas[2]) {
+          if (inputMas[j][1] > 5) {
             if (countNoneSpiers == 0) {
               array_generator(1, 0, j, CUBE_HIGHT_B, 0, i, 0);
               countNoneSpiers++;
@@ -270,35 +261,32 @@ void lord_of_the_builders_two_arrays() {
       }
 
       else { //если на этаже бесполезный шпиль
-        Serial.println("3");
         for (byte j = 0; j <= 4; j++) {
           if (j != i and inputMas[j][1] != spiersMas[0] and inputMas[j][1] != spiersMas[1] and inputMas[j][1] != spiersMas[2]) {
             array_generator(1, 0, i, CUBE_HIGHT_B, 0, j, CUBE_HIGHT_B + CUBE_HIGHT_S);
             indexKub = j;
           }
-
-          array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
-
-          byte countSpiersForInputMasTrash = 0;
-          byte countSpiersInMainZone = 2;
-
-          for (byte j = 0; j <= 4; j++) {
-            for (byte L = 0; L <= 3; L++) {
-              if (spiersMas[L] == inputMas[j][1]) {
-                array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + countSpiersForInputMasTrash * CUBE_HIGHT_S);
-                if (countSpiersInMainZone != 2) {
-                  spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
-                }
-                countSpiersInMainZone--;
-                countSpiersForInputMasTrash++;
-              }
-            }
-          }
-
-          array_generator(2, 0, indexKub, CUBE_HIGHT_B, 0, i, 0);
-
-          break;
         }
+
+        array_generator(0, 0, i, 0, 1, spiersMas[3], 0);
+
+        byte countSpiersForInputMasTrash = 0;
+        byte countSpiersInMainZone = 2;
+
+        for (byte j = 0; j <= 4; j++) {
+          for (byte L = 0; L <= 3; L++) {
+            array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + countSpiersForInputMasTrash * CUBE_HIGHT_S);
+            if (countSpiersInMainZone > 0) {
+              spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
+            }
+            countSpiersInMainZone--;
+            countSpiersForInputMasTrash++;
+          }
+        }
+
+        array_generator(2, 0, indexKub, CUBE_HIGHT_B, 0, i, 0);
+
+        break;
       }
     }
   }
