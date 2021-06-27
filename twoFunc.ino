@@ -5,7 +5,7 @@ byte finalMas[17][7];
 #define CUBE_HIGHT_S 31
 
 byte outputMas[3][3] = {{5, 4, 3}, {3, 1, 2}, {0, 2, 4}};
-byte inputMas[5][2] = {{5, 7}, {1, 10}, {2, 8}, {4, 6}, {3, 9}};
+byte inputMas[5][2] = {{5, 7}, {1, 10}, {2, 8}, {4, 6}, {3, 9}};a
 byte spiersMas[3];
 byte countStep = 0;
 byte count = 0;
