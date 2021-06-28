@@ -5,7 +5,7 @@ byte finalMas[17][7];
 #define CUBE_HIGHT_S 31
 
 byte outputMas[3][3] = {{5, 4, 3}, {3, 1, 2}, {0, 2, 4}};
-byte inputMas[5][2] = {{5, 10}, {1, 7}, {2, 8}, {4, 6}, {3, 9}};
+byte inputMas[5][2] = {{5, 7}, {1, 6}, {2, 10}, {4, 8}, {3, 9}};
 byte spiersMas[4] = {0, 0, 0, 0};
 byte countStep = 0;
 byte count = 0;
@@ -13,14 +13,6 @@ byte count = 0;
 void setup() {
   Serial.begin(9600);
   lord_of_the_builders_two_arrays();
-  for (int i = 0; i < 17; i++) {
-    for (int j = 0; j < 7; j++) {
-      Serial.print(int(finalMas[i][j]));
-      Serial.print("--");
-    }
-    Serial.println();
-  }
-  Serial.println("/////////////////");
 }
 
 void loop() {
@@ -160,7 +152,6 @@ void lord_of_the_builders_two_arrays() {
       byte indexPutNoSpiers = i;
 
       if (inputMas[i][1] == spiersMas[0]) {//если на этаже шпиль, который изначально долежн быть на нём
-        Serial.println("1");
         if (i == 4)
           array_generator(1, 0, i, CUBE_HIGHT_B, 0, 3, CUBE_HIGHT_S + CUBE_HIGHT_B);
         else
@@ -273,14 +264,16 @@ void lord_of_the_builders_two_arrays() {
         byte countSpiersForInputMasTrash = 0;
         byte countSpiersInMainZone = 2;
 
-        for (byte j = 0; j <= 4; j++) {
-          for (byte L = 0; L <= 3; L++) {
-            array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + countSpiersForInputMasTrash * CUBE_HIGHT_S);
-            if (countSpiersInMainZone > 0) {
+        for (byte k = 0; k <= 2; k++) {
+          for (byte j = 0; j <= 4; j++) {
+            if (inputMas[j][1] == spiersMas[k]) {
+              array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
+              if (countSpiersInMainZone != 2) {
               spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
+              }
+              countSpiersInMainZone--;
+              countSpiersForInputMasTrash++;
             }
-            countSpiersInMainZone--;
-            countSpiersForInputMasTrash++;
           }
         }
 
