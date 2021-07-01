@@ -3,19 +3,8 @@ import serial
 import cv2
 
 
-# red - 1
-# green - 2
-# yellow - 3
-# blue - 4
-# black - 5
-
-ser = serial.Serial('/dev/ttyACM1', 9600)
-
-cameraPort = 0
-
-
-def watchimg(fram):
-    cv2.imshow('frame', fram)
+def watchimg(F):
+    cv2.imshow('frame', F)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -55,81 +44,68 @@ def obrezka(F, hsv_min, hsv_max):
     return flagError
 
 
-def obrezkaMat(F, hsv_min, hsv_max):
-
-    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
-        
-    F = cv2.inRange(F, hsv_min, hsv_max)
-    
-    w, h = 0, 0
-    contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    contours = contours[0]
-    if contours:
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        (_, _, w, h) = cv2.boundingRect(contours[0])
-
-        if h > 10 and (w > 10):
-            flagError = True
-        else:
-            flagError = False
-        
-
-    return flagError
-
-
 def materials_matrix():
+    cap = cv2.VideoCapture(cameraPort)
+    while True:
+        _, frame = cap.read()
+        if frame[0][0][0] != 0:
+            #cv2.imwrite('c'+str(countVar)+'.png', frame)
+            break
+
+    #img = cv2.imread('c'+str(countVar)+'.png')
 
     massmat = []
 
-    imglow = img[228:248, 188:208]
+    imglow = frame[228:248, 188:208]
     imglow = segimg(imglow)
-    imghight = img[205:225, 335:355]
+    imghight = frame[205:225, 335:355]
     imghight = segimg(imghight)
     checkMas = [imglow, imghight]
     
     for image in checkMas:
      # по черным фигурам
-        ids = obrezkaMat(image, blm_min, blm_max)
+        ids = obrezka(image, blm_minMat, blm_maxMat)
         if ids:
             massmat.append(5)
             continue
     
     # по синим фигурам
-        ids = obrezkaMat(image, blu_min, blu_max)
+        ids = obrezka(image, blu_minMat, blu_maxMat)
         if ids:
             massmat.append(4)
             continue
 
     # по зелёным фигурам
-        ids = obrezkaMat(image, gre_min, gre_max)
+        ids = obrezka(image, gre_minMat, gre_maxMat)
         if ids:
             massmat.append(2)
             continue
 
     # по жёлтым фигурам
-        ids = obrezkaMat(image, yel_min, yel_max)
+        ids = obrezka(image, yel_minMat, yel_maxMat)
         if ids:
             massmat.append(3)
             continue
     
     # по красным фигурам
-        ids = obrezkaMat(image, red_min, red_max)
+        ids = obrezka(image, red_minMat, red_maxMat)
         if ids:
             massmat.append(1)
             continue
 
     ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
-    print((str(massmat[1])+str(massmat[0])).encode('utf-8'))
+    print(str(massmat[1])+str(massmat[0]))
 
 
 def matrix_final():
     while True:
+        cap = cv2.VideoCapture(cameraPort)
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            cv2.imwrite('cfin.png', frame)
+            #cv2.imwrite('cfin.png', frame)
             break
 
-    frame = cv2.imread('cfin.png')
+    #frame = cv2.imread('cfin.png')
 
     M = cv2.getRotationMatrix2D((640 // 2, 480 // 2), 82, 1.0)
     img = cv2.warpAffine(frame, M, (640, 480))
@@ -207,34 +183,67 @@ def matrix_final():
     return finalMap
 
 
+
+# red - 1
+# green - 2
+# yellow - 3
+# blue - 4
+# black - 5
+
+
+try:
+    ser = serial.Serial('/dev/ttyACM1', 9600)
+except:
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 9600)
+    except:
+        print("Значок, что ты дурачек")
+        exit(0)
+
+
+cameraPort = 0
+
+
+red_min = np.array((0, 176, 104), np.uint8)   # 142, 100, 46
+red_max = np.array((179, 255, 180), np.uint8) # 179, 255, 255
+    
+blm_min = np.array((0, 0, 0),      np.uint8)  # 0,   0,   0
+blm_max = np.array((179, 255, 30), np.uint8)  # 179, 255, 27
+         
+gre_min = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
+gre_max = np.array((104, 255, 255), np.uint8) # 104, 255, 255
+    
+yel_min = np.array((11, 116, 100), np.uint8)  # 11, 116, 100
+yel_max = np.array((35, 255, 255), np.uint8)  # 55, 255, 255
+    
+blu_min = np.array((100, 176, 31), np.uint8)  # 111, 176, 16
+blu_max = np.array((135, 255, 255), np.uint8) # 131, 255, 255
+
+
+
+red_minMat = np.array((0, 176, 104), np.uint8)   # 0,   176, 104
+red_maxMat = np.array((179, 255, 180), np.uint8) # 179, 255, 255
+    
+blm_minMat = np.array((0, 0, 0), np.uint8)       # 0,   0,   0
+blm_maxMat = np.array((179, 255, 27), np.uint8)  # 179, 255, 12
+         
+gre_minMat = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
+gre_maxMat = np.array((100, 255, 255), np.uint8) # 104, 255, 255
+    
+yel_minMat = np.array((11, 92, 150), np.uint8)   # 11, 116, 125
+yel_maxMat = np.array((55, 255, 255), np.uint8)  # 55, 255, 255
+    
+blu_minMat = np.array((100, 176, 30), np.uint8)  # 100, 176, 16
+blu_maxMat = np.array((131, 255, 255), np.uint8) # 131, 255, 255
+    
+
 countVar = 0
 
-
-red_min = np.array((0, 176, 104), np.uint8)  # 142, 100, 46
-red_max = np.array((179, 255, 255), np.uint8) #196, 255, 150
-    
-blm_min = np.array((0, 0, 0), np.uint8) #0, 0, 0
-blm_max = np.array((179, 255, 27), np.uint8) #255, 255, 12
-         
-gre_min = np.array((38, 121, 15), np.uint8)     #38, 121, 0
-gre_max = np.array((104, 255, 255), np.uint8)  #104, 255, 255
-    
-yel_min = np.array((11, 116, 100), np.uint8)  # 11, 116, 125
-yel_max = np.array((55,255, 255), np.uint8)  # 55, 200, 255
-    
-blu_min = np.array((100, 176, 16), np.uint8)  # 111, 176, 41
-blu_max = np.array((131, 255, 255), np.uint8)  #131, 255, 255
-    
-    
-
-while True:
-    if ser.in_waiting > 0:
-        cap = cv2.VideoCapture(cameraPort)
-        break
 
 while True:
     if ser.in_waiting > 0:
         if countVar == 0:
+
             building_map_fin = matrix_final()
 
             print(building_map_fin)
@@ -243,13 +252,9 @@ while True:
             countVar += 1
 
         elif (countVar > 0) and countVar < 6:
-            while True:
-                _, frame = cap.read()
-                if frame[0][0][0] != 0:
-                    cv2.imwrite('c'+str(countVar)+'.png', frame)
-                    break
-            img = cv2.imread('c'+str(countVar)+'.png')
+
             materials_matrix()
+
             countVar += 1
             if (countVar == 6):
                 countVar = 0
