@@ -45,7 +45,7 @@ byte spiersMas[4];
 
 //byte inputMas[5][2] = {{2, 8}, {3, 10}, {5, 6}, {1, 9}, {4, 7}};
 byte inputMas[5][2] = {{5, 7}, {4, 8}, {2, 6}, {1, 9}, {3, 10}};
-byte outputMas[3][3] = {{5, 4, 3}, {3, 1, 2}, {0, 2, 4}};
+byte outputMas[3][3] = {{4, 3, 5}, {1, 2, 3}, {2, 4, 0}};
 
 //---------------CONST MANIPULATOR---------------
 
@@ -78,10 +78,10 @@ Servo ServoY;
 Servo ServoZ;
 Servo ServoZZ;
 
-int del = 80;
-int ServX[4] = {150, 93, 90, 40};
+int del = 50;
+int ServX[4] = {150, 93, 90, 45};
 int ServY[3] = {130, 95, 22};
-int ServZ[3] = {120, 70, 45};
+int ServZ[3] = {120, 70, 43};
 int ServZZ[2] = {70, 50};
 
 const int gap = 5;
@@ -97,7 +97,6 @@ const int stepPerTurn = 200;
 int MasOfActionSteps[40][5];                            ///////     (Astepper, Zstepper, S1, S2, grab)
 
 int IndexOfActionSteps = 0;
-int servPos = ServX[0];
 int MainIndex = 0;
 int arrStepsHeight[40];
 int arrHeight[40][8];
@@ -113,6 +112,8 @@ void setup() {
   pinMode(A_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
   pinMode(Z_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
 
+  pinMode(MUSIC_PIN, OUTPUT);
+  
   ServoX.attach(SERVO_X);
   ServoY.attach(SERVO_Y);
   ServoZ.attach(SERVO_Z);
@@ -162,12 +163,18 @@ void setup() {
 
   ServoZ.write(ServZ[0]);
 
-  Astepper.setMaxSpeed(1500);
+  Astepper.setMaxSpeed(1000);
   Astepper.setAcceleration(5000);
 
-  Zstepper.setMaxSpeed(1500);
-  Zstepper.setAcceleration(5000);
+  Zstepper.setMaxSpeed(800);
+  Zstepper.setAcceleration(6000);
 
+//  Astepper.setMaxSpeed(1000);
+//  Astepper.setAcceleration(5000);
+//
+//  Zstepper.setMaxSpeed(800);
+//  Zstepper.setAcceleration(6000);
+  
   Zstepper.setTarget(120 * stepInmm);
   Astepper.setTarget(0);
   while (Zstepper.getState() || Astepper.getState()) {
@@ -277,15 +284,20 @@ void loop() {
     //    delay(500);
   }
   else if (F) {
-    Zstepper.setTarget(197 * stepInmm);
+    Zstepper.setTarget(1230 - 9 * stepInmm);
     while (Zstepper.getState()) {
       Zstepper.tick();
     }
     delay(del);
-    Astepper.setTarget(-200 * 3 + 20);
+//    Astepper.setTarget(-200 * 3 + 20);
+    Astepper.setTarget(200 * 5 - 20);
     while(Astepper.getState()) {
       Astepper.tick();
     }
+    ServoX.write(ServX[0]);
+    ServoY.write(ServY[0]);
+    ServoZ.write(ServZ[2]);
+    ServoZZ.write(ServZZ[0]);
     delay(del);
     Pisk(500);
     F = 0;
@@ -421,7 +433,7 @@ void lord_of_the_builders_two_arrays() {
 
   //перетаскиваем один этаж и 3 шпиля в зону постройки, после чего убираем 2 бесполезных шпиля
   for (byte i = 0; i <= 4; i++) {
-    if (inputMas[i][0] == outputMas[0][0]) {
+    if (inputMas[i][0] == outputMas[0][spiersMas[3]]) {
 
       byte indexPutNoSpiers = i;
 
@@ -530,7 +542,6 @@ void lord_of_the_builders_two_arrays() {
           if (j != i and inputMas[j][1] != spiersMas[0] and inputMas[j][1] != spiersMas[1] and inputMas[j][1] != spiersMas[2]) {
             array_generator(1, 0, i, CUBE_HIGHT_B, 0, j, CUBE_HIGHT_B + CUBE_HIGHT_S);
             indexKub = j;
-            break;
           }
         }
 
@@ -542,9 +553,9 @@ void lord_of_the_builders_two_arrays() {
         for (byte k = 0; k <= 2; k++) {
           for (byte j = 0; j <= 4; j++) {
             if (inputMas[j][1] == spiersMas[k]) {
-              array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
+              array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
               if (countSpiersInMainZone != 2) {
-              spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
+                spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
               }
               countSpiersInMainZone--;
               countSpiersForInputMasTrash++;
@@ -652,7 +663,7 @@ void GoHome() {
   Astepper.setRunMode(FOLLOW_POS);
   Zstepper.setRunMode(FOLLOW_POS);
   Astepper.setCurrent(-200 * 3 + 20);
-  Zstepper.setCurrent(1230 - 7 * stepInmm);
+  Zstepper.setCurrent(1230 - 9 * stepInmm);
 
   ServoX.write(ServX[0]);
   ServoY.write(ServY[0]);
@@ -673,7 +684,7 @@ void ZeroFunktion() {
   }
 
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  //  lord_of_the_builders_brotherhood_array();
+  lord_of_the_builders_brotherhood_array();
   ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
   while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
     delay(1);
@@ -690,7 +701,7 @@ void ZeroFunktion() {
         Zstepper.tick();
     }
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    //    lord_of_the_builders_brotherhood_array();
+    lord_of_the_builders_brotherhood_array();
     ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
     while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
       delay(1);
@@ -816,12 +827,12 @@ void MoveToFinish(int Indx, int MMy, int T) {
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] + ServY[2];
       break;
     case 1:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - 4);
+      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - 3);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[2] + 10;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
       break;
     case 2:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - angle - 9);
+      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - angle - 8);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[3] + 15;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] - ServY[2] - 3;
       break;
