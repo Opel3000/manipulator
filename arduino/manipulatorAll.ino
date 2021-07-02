@@ -540,7 +540,7 @@ void lord_of_the_builders_two_arrays() {
         for (byte k = 0; k <= 2; k++) {
           for (byte j = 0; j <= 4; j++) {
             if (inputMas[j][1] == spiersMas[k]) {
-              array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
+              array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
               if (countSpiersInMainZone != 2) {
                 spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
               }
