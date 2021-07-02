@@ -87,6 +87,7 @@ int ServZZ[2] = {70, 50};
 const int gap = 5;
 const int turnPerBigTurn = 8;
 const int stepInmm = 6;
+const int halfTurn = 200 * 4;
 
 const int stepPerTurn = 200;
 
@@ -107,7 +108,7 @@ bool F = 1;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("AnormA");
+  Serial.println(relativelyPos(-1800, 50));
 
   pinMode(A_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
   pinMode(Z_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
@@ -117,6 +118,7 @@ void setup() {
   ServoX.attach(SERVO_X);
   ServoY.attach(SERVO_Y);
   ServoZ.attach(SERVO_Z);
+  
   ServoZZ.attach(SERVO_ZZ);
 
   GoHome();
@@ -553,7 +555,7 @@ void lord_of_the_builders_two_arrays() {
         for (byte k = 0; k <= 2; k++) {
           for (byte j = 0; j <= 4; j++) {
             if (inputMas[j][1] == spiersMas[k]) {
-              array_generator(1, 0, j, CUBE_HIGHT_B, 1, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
+              array_generator(1, 0, j, CUBE_HIGHT_B, 0, spiersMas[3], CUBE_HIGHT_B + (countSpiersForInputMasTrash * CUBE_HIGHT_S));
               if (countSpiersInMainZone != 2) {
                 spiersInMainZone[countSpiersInMainZone] = inputMas[j][1];
               }
@@ -662,7 +664,7 @@ void GoHome() {
 
   Astepper.setRunMode(FOLLOW_POS);
   Zstepper.setRunMode(FOLLOW_POS);
-  Astepper.setCurrent(-200 * 3 + 20);
+  Astepper.setCurrent(-200 + 20);
   Zstepper.setCurrent(1230 - 9 * stepInmm);
 
   ServoX.write(ServX[0]);
@@ -819,7 +821,7 @@ int MaxHeight(int (&SomeArr)[40][8], int a, int b, int indexS) {
 
 void MoveToFinish(int Indx, int MMy, int T) {
   int angle = 22;
-  int smeshenie = 180;
+  int smeshenie = 270;
   switch (Indx) {
     case 0:
       MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie + angle);
@@ -843,12 +845,17 @@ void MoveToFinish(int Indx, int MMy, int T) {
 }
 
 void MoveToStart(int Indx, int MMy, int T) {
-
-  MasOfActionSteps[IndexOfActionSteps][0] = rotate((30 * Indx) - 59 - Indx);
+  int angle = rotate((30 * Indx) + 30 - Indx);
+  
+  if(IndexOfActionSteps > 0) {
+    MasOfActionSteps[IndexOfActionSteps][0] = relativelyPos(MasOfActionSteps[IndexOfActionSteps - 1][0], angle);
+  }
+//  MasOfActionSteps[IndexOfActionSteps][0] = rotate((30 * Indx) - 59 - Indx);
 
   MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap);
   if (T == 0)
     MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
+    
   MasOfActionSteps[IndexOfActionSteps][2] = ServX[1];
   MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
 }
@@ -862,6 +869,30 @@ int rotate(int Angl) {
 
 int MoveMM(int MM) {
   return MM * stepInmm;
+}
+
+int relativelyPos(int start, int finish) {
+  int deltaStart = relativelyAngle(start);
+  int difference;
+  if(finish > halfTurn)
+    finish = revers(finish);
+  finish -= deltaStart;
+  if(abs(revers(finish)) < abs(finish))
+    finish = revers(finish);
+  difference = finish;
+  return start + difference;
+}
+
+int revers(int stp) {
+  int all = stepPerTurn * turnPerBigTurn;
+  if(stp > 0)
+    return -all + stp;
+  else
+    return all + stp;
+}
+
+int relativelyAngle(int stp) {
+  return stp % (stepPerTurn * turnPerBigTurn);
 }
 
 void Pisk(int T) {
