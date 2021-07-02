@@ -171,11 +171,11 @@ void setup() {
   Zstepper.setMaxSpeed(800);
   Zstepper.setAcceleration(6000);
 
-//  Astepper.setMaxSpeed(1000);
-//  Astepper.setAcceleration(5000);
-//
-//  Zstepper.setMaxSpeed(800);
-//  Zstepper.setAcceleration(6000);
+  //  Astepper.setMaxSpeed(1000);
+  //  Astepper.setAcceleration(5000);
+  //
+  //  Zstepper.setMaxSpeed(800);
+  //  Zstepper.setAcceleration(6000);
   
   Zstepper.setTarget(120 * stepInmm);
   Astepper.setTarget(0);
@@ -291,8 +291,9 @@ void loop() {
       Zstepper.tick();
     }
     delay(del);
-//    Astepper.setTarget(-200 * 3 + 20);
-    Astepper.setTarget(200 * 5 - 20);
+    // Astepper.setTarget(200 * 5 - 20);
+    
+    Astepper.setTarget(relativelyPos(Astepper.getCurrent(), 200 * 7 - 20));
     while(Astepper.getState()) {
       Astepper.tick();
     }
@@ -766,7 +767,7 @@ void PointG() {
   MasOfActionSteps[IndexOfActionSteps][0] = -1;
   ///////               (type, PlaceIn, xIn, yIn, PlaceOut, xOut, yOut)
 
-//  Fix1(arrHeight);
+  //  Fix1(arrHeight);
   IndexOfActionSteps = 0;
   i = 0;
   while (finalMas[i][0] != 99) {
@@ -820,25 +821,32 @@ int MaxHeight(int (&SomeArr)[40][8], int a, int b, int indexS) {
 }
 
 void MoveToFinish(int Indx, int MMy, int T) {
-  int angle = 22;
+  int deltaAngle = 22;
   int smeshenie = 270;
+  int angle;
   switch (Indx) {
     case 0:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie + angle);
+      angle = rotate(smeshenie + deltaAngle);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[3];
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] + ServY[2];
       break;
     case 1:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - 3);
+      angle = rotate(smeshenie - 3);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[2] + 10;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
       break;
     case 2:
-      MasOfActionSteps[IndexOfActionSteps][0] = rotate(smeshenie - angle - 8);
+      angle = rotate(smeshenie - deltaAngle - 8);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[3] + 15;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] - ServY[2] - 3;
       break;
   }
+
+  if(IndexOfActionSteps > 0)
+    MasOfActionSteps[IndexOfActionSteps][0] = relativelyPos(MasOfActionSteps[IndexOfActionSteps - 1][0], angle);
+  else
+    MasOfActionSteps[IndexOfActionSteps][0] = angle;
+
   MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap);
   if (T == 0)
     MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
@@ -847,10 +855,10 @@ void MoveToFinish(int Indx, int MMy, int T) {
 void MoveToStart(int Indx, int MMy, int T) {
   int angle = rotate((30 * Indx) + 30 - Indx);
   
-  if(IndexOfActionSteps > 0) {
+  if(IndexOfActionSteps > 0)
     MasOfActionSteps[IndexOfActionSteps][0] = relativelyPos(MasOfActionSteps[IndexOfActionSteps - 1][0], angle);
-  }
-//  MasOfActionSteps[IndexOfActionSteps][0] = rotate((30 * Indx) - 59 - Indx);
+  else
+    MasOfActionSteps[IndexOfActionSteps][0] = angle;
 
   MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap);
   if (T == 0)
@@ -873,14 +881,12 @@ int MoveMM(int MM) {
 
 int relativelyPos(int start, int finish) {
   int deltaStart = relativelyAngle(start);
-  int difference;
   if(finish > halfTurn)
     finish = revers(finish);
   finish -= deltaStart;
   if(abs(revers(finish)) < abs(finish))
     finish = revers(finish);
-  difference = finish;
-  return start + difference;
+  return start + finish;
 }
 
 int revers(int stp) {
