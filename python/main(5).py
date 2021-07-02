@@ -23,6 +23,8 @@ def segimg(F):
     
     
 def obrezka(F, hsv_min, hsv_max):
+    
+    flagError = False
 
     F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
 
@@ -49,25 +51,20 @@ def materials_matrix():
     while True:
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            #cv2.imwrite('c'+str(countVar)+'.png', frame)
+            cv2.imwrite('c'+str(countVar)+'.png', frame)
             break
 
-    #img = cv2.imread('c'+str(countVar)+'.png')
+    #frame = cv2.imread('c'+str(countVar)+'.png')
 
     massmat = []
 
-    imglow = frame[228:248, 188:208]
+    imglow = frame[228:288, 188:208]
     imglow = segimg(imglow)
-    imghight = frame[205:225, 335:355]
+    imghight = frame[225:285, 335:355]
     imghight = segimg(imghight)
     checkMas = [imglow, imghight]
     
     for image in checkMas:
-     # по черным фигурам
-        ids = obrezka(image, blm_minMat, blm_maxMat)
-        if ids:
-            massmat.append(5)
-            continue
     
     # по синим фигурам
         ids = obrezka(image, blu_minMat, blu_maxMat)
@@ -92,53 +89,70 @@ def materials_matrix():
         if ids:
             massmat.append(1)
             continue
+        
+        # по черным фигурам
+        ids = obrezka(image, blm_minMat, blm_maxMat)
+        if ids:
+            massmat.append(5)
+            continue
 
     ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
     print(str(massmat[1])+str(massmat[0]))
 
 
 def matrix_final():
+    cap = cv2.VideoCapture(cameraPort)
+    xx = 0
     while True:
-        cap = cv2.VideoCapture(cameraPort)
+        ret, frame = cap.read()
+        cv2.imshow('img1', frame)
+        cv2.waitKey(100)
+        xx += 1
+        if xx > 10:
+            break
+    while True:
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            #cv2.imwrite('cfin.png', frame)
+            cv2.imwrite('cfin.png', frame)
             break
+
 
     #frame = cv2.imread('cfin.png')
 
     M = cv2.getRotationMatrix2D((640 // 2, 480 // 2), 82, 1.0)
     img = cv2.warpAffine(frame, M, (640, 480))
 
-    floorOne = 248
-    floorTwo = 331
+
+    floorOne = 260
+    floorTwo = 345
     floorThree = 432
 
     pillarOne = 210
-    pillarTwo = 296
-    pillarThree = 385
+    pillarTwo = 300
+    pillarThree = 380
+
 
     finalMap = ""
 
-    img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+15]
+    img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+50]
     img00 = segimg(img00)
-    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+15]
+    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+50]
     img01 = segimg(img01)
-    img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+15]
+    img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+50]
     img02 = segimg(img02)
 
-    img10 = img[floorTwo:floorTwo+15, pillarOne:pillarOne+15]
+    img10 = img[floorTwo:floorTwo+15, pillarOne:pillarOne+50]
     img10 = segimg(img10)
-    img11 = img[floorTwo:floorTwo+15, pillarTwo:pillarTwo+15]
+    img11 = img[floorTwo:floorTwo+15, pillarTwo:pillarTwo+50]
     img11 = segimg(img11)
-    img12 = img[floorTwo:floorTwo+15, pillarThree:pillarThree+15]
+    img12 = img[floorTwo:floorTwo+15, pillarThree:pillarThree+50]
     img12 = segimg(img12)
 
-    img20 = img[floorThree:floorThree+15, pillarOne:pillarOne+15]
+    img20 = img[floorThree:floorThree+15, pillarOne:pillarOne+50]
     img20 = segimg(img20)
-    img21 = img[floorThree:floorThree+15, pillarTwo:pillarTwo+15]
+    img21 = img[floorThree:floorThree+15, pillarTwo:pillarTwo+50]
     img21 = segimg(img21)
-    img22 = img[floorThree:floorThree+15, pillarThree:pillarThree+15]
+    img22 = img[floorThree:floorThree+15, pillarThree:pillarThree+50]
     img22 = segimg(img22)
 
     checkMas = [img00, img01, img02,
@@ -192,10 +206,10 @@ def matrix_final():
 
 
 try:
-    ser = serial.Serial('/dev/ttyACM1', 9600)
+    ser = serial.Serial('/dev/ttyACM1', 115200)
 except:
     try:
-        ser = serial.Serial('/dev/ttyACM0', 9600)
+        ser = serial.Serial('/dev/ttyACM0', 115200)
     except:
         print("Значок, что ты дурачек")
         exit(0)
@@ -204,8 +218,8 @@ except:
 cameraPort = 0
 
 
-red_min = np.array((0, 176, 104), np.uint8)   # 142, 100, 46
-red_max = np.array((179, 255, 180), np.uint8) # 179, 255, 255
+red_min = np.array((0, 180, 104), np.uint8)   # 0, 176, 104
+red_max = np.array((179, 255, 200), np.uint8) # 179, 255, 180
     
 blm_min = np.array((0, 0, 0),      np.uint8)  # 0,   0,   0
 blm_max = np.array((179, 255, 30), np.uint8)  # 179, 255, 27
@@ -221,11 +235,11 @@ blu_max = np.array((135, 255, 255), np.uint8) # 131, 255, 255
 
 
 
-red_minMat = np.array((0, 176, 104), np.uint8)   # 0,   176, 104
-red_maxMat = np.array((179, 255, 180), np.uint8) # 179, 255, 255
+red_minMat = np.array((0, 198, 104), np.uint8)   # 0,   176, 104
+red_maxMat = np.array((179, 255, 255), np.uint8) # 179, 255, 255
     
 blm_minMat = np.array((0, 0, 0), np.uint8)       # 0,   0,   0
-blm_maxMat = np.array((179, 255, 27), np.uint8)  # 179, 255, 12
+blm_maxMat = np.array((179, 255, 66), np.uint8)  # 179, 255, 12
          
 gre_minMat = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
 gre_maxMat = np.array((100, 255, 255), np.uint8) # 104, 255, 255
@@ -240,8 +254,11 @@ blu_maxMat = np.array((131, 255, 255), np.uint8) # 131, 255, 255
 countVar = 0
 
 
+
+
 while True:
     if ser.in_waiting > 0:
+        print(ser.read())
         if countVar == 0:
 
             building_map_fin = matrix_final()
