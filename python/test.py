@@ -134,25 +134,25 @@ def matrix_final():
 
     finalMap = ""
 
-    img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+30]
+    img00 = img[floorOne:floorOne+15, pillarOne:pillarOne+50]
     img00 = segimg(img00)
-    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+30]
+    img01 = img[floorOne:floorOne+15, pillarTwo:pillarTwo+50]
     img01 = segimg(img01)
-    img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+30]
+    img02 = img[floorOne:floorOne+15, pillarThree:pillarThree+50]
     img02 = segimg(img02)
 
-    img10 = img[floorTwo:floorTwo+15, pillarOne:pillarOne+30]
+    img10 = img[floorTwo:floorTwo+15, pillarOne:pillarOne+50]
     img10 = segimg(img10)
-    img11 = img[floorTwo:floorTwo+15, pillarTwo:pillarTwo+30]
+    img11 = img[floorTwo:floorTwo+15, pillarTwo:pillarTwo+50]
     img11 = segimg(img11)
-    img12 = img[floorTwo:floorTwo+15, pillarThree:pillarThree+30]
+    img12 = img[floorTwo:floorTwo+15, pillarThree:pillarThree+50]
     img12 = segimg(img12)
 
-    img20 = img[floorThree:floorThree+15, pillarOne:pillarOne+30]
+    img20 = img[floorThree:floorThree+15, pillarOne:pillarOne+50]
     img20 = segimg(img20)
-    img21 = img[floorThree:floorThree+15, pillarTwo:pillarTwo+30]
+    img21 = img[floorThree:floorThree+15, pillarTwo:pillarTwo+50]
     img21 = segimg(img21)
-    img22 = img[floorThree:floorThree+15, pillarThree:pillarThree+30]
+    img22 = img[floorThree:floorThree+15, pillarThree:pillarThree+50]
     img22 = segimg(img22)
 
     checkMas = [img00, img01, img02,
