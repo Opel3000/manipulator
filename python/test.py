@@ -113,7 +113,7 @@ def matrix_final():
     while True:
         _, frame = cap.read()
         if frame[0][0][0] != 0:
-            cv2.imwrite('cfin.png', frame)
+           # cv2.imwrite('cfin.png', frame)
             break
 
 
@@ -233,7 +233,8 @@ yel_max = np.array((35, 255, 255), np.uint8)  # 55, 255, 255
 blu_min = np.array((100, 176, 31), np.uint8)  # 111, 176, 16
 blu_max = np.array((135, 255, 255), np.uint8) # 131, 255, 255
 
-
+Mat_min = np.array((0, 0, 225), np.uint8)  # 111, 176, 16
+Mat_max = np.array((179, 255, 255), np.uint8) # 131, 255, 255
 
 red_minMat = np.array((0, 198, 104), np.uint8)   # 0,   176, 104
 red_maxMat = np.array((179, 255, 255), np.uint8) # 179, 255, 255
