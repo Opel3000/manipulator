@@ -2,6 +2,53 @@ import numpy as np
 import serial
 import cv2
 
+cameraPort = 0
+
+red_min = np.array((0, 180, 104), np.uint8)   # 0, 176, 104
+red_max = np.array((179, 255, 200), np.uint8) # 179, 255, 180
+    
+blm_min = np.array((0, 0, 0),      np.uint8)  # 0,   0,   0
+blm_max = np.array((179, 255, 30), np.uint8)  # 179, 255, 27
+         
+gre_min = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
+gre_max = np.array((104, 255, 255), np.uint8) # 104, 255, 255
+    
+yel_min = np.array((11, 116, 100), np.uint8)  # 11, 116, 100
+yel_max = np.array((35, 255, 255), np.uint8)  # 55, 255, 255
+    
+blu_min = np.array((100, 176, 31), np.uint8)  # 111, 176, 16
+blu_max = np.array((135, 255, 255), np.uint8) # 131, 255, 255
+
+Mat_min = np.array((0, 0, 160), np.uint8)  # 111, 176, 16
+Mat_max = np.array((179, 255, 255), np.uint8) # 131, 255, 255
+
+red_minMat = np.array((0, 198, 104), np.uint8)   # 0,   176, 104
+red_maxMat = np.array((179, 255, 255), np.uint8) # 179, 255, 255
+    
+blm_minMat = np.array((0, 0, 0), np.uint8)       # 0,   0,   0
+blm_maxMat = np.array((179, 255, 66), np.uint8)  # 179, 255, 12
+         
+gre_minMat = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
+gre_maxMat = np.array((100, 255, 255), np.uint8) # 104, 255, 255
+    
+yel_minMat = np.array((11, 92, 150), np.uint8)   # 11, 116, 125
+yel_maxMat = np.array((55, 255, 255), np.uint8)  # 55, 255, 255
+    
+blu_minMat = np.array((100, 176, 30), np.uint8)  # 100, 176, 16
+blu_maxMat = np.array((131, 255, 255), np.uint8) # 131, 255, 255
+    
+
+countVar = 0
+
+try:
+    ser = serial.Serial('/dev/ttyACM1', 115200)
+except:
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 115200)
+    except:
+        print("Значок, что ты дурачек")
+        exit(0)
+
 
 def watchimg(F):
     cv2.imshow('frame', F)
@@ -56,55 +103,113 @@ def materials_matrix():
 
     #frame = cv2.imread('c'+str(countVar)+'.png')
 
-    massmat = []
 
-    imglow = frame[228:288, 188:208]
-    imglow = segimg(imglow)
-    imghight = frame[225:285, 335:355]
-    imghight = segimg(imghight)
-    checkMas = [imglow, imghight]
-    
-    for image in checkMas:
-    
-    # по синим фигурам
+    if(countVar != 1 and countVar != 7):
+
+        massmat = []
+
+        imglow = frame[228:288, 188:208]
+        imglow = segimg(imglow)
+        imghight = frame[225:285, 335:355]
+        imghight = segimg(imghight)
+        checkMas = [imglow, imghight]
+        
+        for image in checkMas:
+        
+        # по синим фигурам
+            ids = obrezka(image, blu_minMat, blu_maxMat)
+            if ids:
+                massmat.append(4)
+                continue
+
+        # по зелёным фигурам
+            ids = obrezka(image, gre_minMat, gre_maxMat)
+            if ids:
+                massmat.append(2)
+                continue
+
+        # по жёлтым фигурам
+            ids = obrezka(image, yel_minMat, yel_maxMat)
+            if ids:
+                massmat.append(3)
+                continue
+        
+        # по красным фигурам
+            ids = obrezka(image, red_minMat, red_maxMat)
+            if ids:
+                massmat.append(1)
+                continue
+            
+            # по черным фигурам
+            ids = obrezka(image, blm_minMat, blm_maxMat)
+            if ids:
+                massmat.append(5)
+                continue
+
+            ids = obrezka(image, Mat_min, Mat_max)
+            if ids:
+                massmat.append(6)
+                continue
+
+        ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
+        print(str(massmat[1])+str(massmat[0]))    
+
+    else:
+
+        image = frame
+
+        # по синим фигурам
         ids = obrezka(image, blu_minMat, blu_maxMat)
-        if ids:
-            massmat.append(4)
-            continue
+        if ids == 1:
+            ser.write((str(4).encode('utf-8')))
+            return 1
+        elif ids == 2:
+            ser.write((str(9).encode('utf-8')))
+            return 1
 
-    # по зелёным фигурам
+        # по зелёным фигурам
         ids = obrezka(image, gre_minMat, gre_maxMat)
-        if ids:
-            massmat.append(2)
-            continue
+        if ids == 1:
+            ser.write((str(2).encode('utf-8')))
+            return 1
+        elif ids == 2:
+            ser.write((str(7).encode('utf-8')))
+            return 1
 
-    # по жёлтым фигурам
+        # по жёлтым фигурам
         ids = obrezka(image, yel_minMat, yel_maxMat)
         if ids:
-            massmat.append(3)
-            continue
+            ser.write((str(3).encode('utf-8')))
+            return 1
+        elif ids == 2:
+            ser.write((str(8).encode('utf-8')))
+            return 1
     
-    # по красным фигурам
+        # по красным фигурам
         ids = obrezka(image, red_minMat, red_maxMat)
         if ids:
-            massmat.append(1)
-            continue
+            ser.write((str(1).encode('utf-8')))
+            return 1
+        elif ids == 2:
+            ser.write((str(6).encode('utf-8')))
+            return 1
         
         # по черным фигурам
         ids = obrezka(image, blm_minMat, blm_maxMat)
         if ids:
-            massmat.append(5)
-            continue
-
-    ser.write((str(massmat[1])+str(massmat[0])).encode('utf-8'))
-    print(str(massmat[1])+str(massmat[0]))
+            ser.write((str(5).encode('utf-8')))
+            return 1
+        elif ids == 2:
+            ser.write((str(10).encode('utf-8')))
+            return 1
+        
 
 
 def matrix_final():
     cap = cv2.VideoCapture(cameraPort)
     xx = 0
     while True:
-        ret, frame = cap.read()
+        _, frame = cap.read()
         cv2.imshow('img1', frame)
         cv2.waitKey(100)
         xx += 1
@@ -205,57 +310,6 @@ def matrix_final():
 # black - 5
 
 
-try:
-    ser = serial.Serial('/dev/ttyACM1', 115200)
-except:
-    try:
-        ser = serial.Serial('/dev/ttyACM0', 115200)
-    except:
-        print("Значок, что ты дурачек")
-        exit(0)
-
-
-cameraPort = 0
-
-
-red_min = np.array((0, 180, 104), np.uint8)   # 0, 176, 104
-red_max = np.array((179, 255, 200), np.uint8) # 179, 255, 180
-    
-blm_min = np.array((0, 0, 0),      np.uint8)  # 0,   0,   0
-blm_max = np.array((179, 255, 30), np.uint8)  # 179, 255, 27
-         
-gre_min = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
-gre_max = np.array((104, 255, 255), np.uint8) # 104, 255, 255
-    
-yel_min = np.array((11, 116, 100), np.uint8)  # 11, 116, 100
-yel_max = np.array((35, 255, 255), np.uint8)  # 55, 255, 255
-    
-blu_min = np.array((100, 176, 31), np.uint8)  # 111, 176, 16
-blu_max = np.array((135, 255, 255), np.uint8) # 131, 255, 255
-
-Mat_min = np.array((0, 0, 225), np.uint8)  # 111, 176, 16
-Mat_max = np.array((179, 255, 255), np.uint8) # 131, 255, 255
-
-red_minMat = np.array((0, 198, 104), np.uint8)   # 0,   176, 104
-red_maxMat = np.array((179, 255, 255), np.uint8) # 179, 255, 255
-    
-blm_minMat = np.array((0, 0, 0), np.uint8)       # 0,   0,   0
-blm_maxMat = np.array((179, 255, 66), np.uint8)  # 179, 255, 12
-         
-gre_minMat = np.array((38, 121, 15), np.uint8)   # 38,  121, 0
-gre_maxMat = np.array((100, 255, 255), np.uint8) # 104, 255, 255
-    
-yel_minMat = np.array((11, 92, 150), np.uint8)   # 11, 116, 125
-yel_maxMat = np.array((55, 255, 255), np.uint8)  # 55, 255, 255
-    
-blu_minMat = np.array((100, 176, 30), np.uint8)  # 100, 176, 16
-blu_maxMat = np.array((131, 255, 255), np.uint8) # 131, 255, 255
-    
-
-countVar = 0
-
-
-
 
 while True:
     if ser.in_waiting > 0:
@@ -269,10 +323,10 @@ while True:
             ser.write(building_map_fin.encode('utf-8'))
             countVar += 1
 
-        elif (countVar > 0) and countVar < 6:
+        elif (countVar > 0) and countVar < 8:
 
             materials_matrix()
 
             countVar += 1
-            if (countVar == 6):
+            if (countVar == 8):
                 countVar = 0
