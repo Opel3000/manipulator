@@ -20,9 +20,14 @@
 #define CUBE_HIGHT_S 31
 
 byte count = 0;
-byte finalMas[20][7];/* = {
-  //                          {1, 0, 2, 41, 1, 0, 41},
-
+byte finalMas[20][7] = {
+                          {3, 0, 3, 41, 0, 0, 0},
+                          {0, 2, 0, 0, 1, 0, 0},
+                          {1, 2, 1, 0, 1, 1, 0},
+                          {1, 0, 1, 41, 1, 1, 31},
+                          {1, 0, 2, 41, 0, 4, 72},
+                          {1, 0, 0, 41, 1, 2, 0},
+/*
                           {0, 0, 0, 72, 1, 2, 31},
                           {0, 0, 2, 72, 1, 2, 62},
                           {0, 0, 3, 72, 1, 2, 93},
@@ -36,10 +41,9 @@ byte finalMas[20][7];/* = {
                           {0, 1, 2, 62, 1, 1, 113},
                           {0, 1, 2, 31, 1, 1, 144},
                           {1, 0, 4, 41, 1, 2, 41},
-                          {0, 1, 1, 144, 1, 2, 72},
-
+                          {0, 1, 1, 144, 1, 2, 72},*/
                           {99, 0, 0, 0, 0, 0, 0}
-  };*/
+  };
 byte countStep = 0;
 byte spiersMas[4];
 
@@ -79,9 +83,9 @@ Servo ServoZ;
 Servo ServoZZ;
 
 int del = 50;
-int ServX[4] = {150, 93, 90, 45};
+int ServX[4] = {150, 93, 90, 50};
 int ServY[3] = {130, 95, 22};
-int ServZ[3] = {120, 70, 43};
+int ServZ[3] = {120, 70, 40};
 int ServZZ[2] = {70, 50};
 
 const int gap = 5;
@@ -100,7 +104,6 @@ int MasOfActionSteps[40][5];                            ///////     (Astepper, Z
 int IndexOfActionSteps = 0;
 int MainIndex = 0;
 int arrStepsHeight[40];
-int arrHeight[40][8];
 bool F = 1;
 
 //---------------END CONST---------------
@@ -108,7 +111,6 @@ bool F = 1;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println(relativelyPos(-1800, 50));
 
   pinMode(A_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
   pinMode(Z_AXIS_LIMIT_SWITCH_PIN, INPUT_PULLUP);
@@ -121,7 +123,7 @@ void setup() {
   
   ServoZZ.attach(SERVO_ZZ);
 
-  GoHome();
+//  GoHome();
 
   /*  while(true){
       Serial.println("GOO");
@@ -177,24 +179,25 @@ void setup() {
   //  Zstepper.setMaxSpeed(800);
   //  Zstepper.setAcceleration(6000);
   
-  Zstepper.setTarget(120 * stepInmm);
-  Astepper.setTarget(0);
-  while (Zstepper.getState() || Astepper.getState()) {
+  Zstepper.setTarget(1230 - 13 * stepInmm);
+  while (Zstepper.getState()) {
     Zstepper.tick();
+  }
+  Astepper.setTarget(-200 * 3-25 + rotate(90));
+  while(Astepper.getState()) {
     Astepper.tick();
   }
-  delay(1000);
+//  WaitPl();  
+  
+//  delay(1000);
 
-  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-    delay(1);
+//  ZeroFunktion();
 
-  //  ZeroFunktion();
-
-  lord_of_the_builders_two_arrays();
-  finalMas[countStep][0] = 99;
+//  lord_of_the_builders_two_arrays();
+//  finalMas[countStep][0] = 99;
   Fix();
   PointG();
-  /*
+  
   Serial.println("/////////////////");
   for (int indexSer = 0; indexSer < 40; indexSer++) {
     Serial.print(indexSer);
@@ -213,19 +216,8 @@ void setup() {
   }
 
   Serial.println("/////////////////");
-  for (int i = 0; i < 40; i++) {
-    Serial.print(i);
-    Serial.print("  ");
-    for (int j = 0; j < 8; j++) {
-      Serial.print(int(arrHeight[i][j]));
-      Serial.print("  ");
-    }
-    Serial.println();
-  }
-
-  Serial.println("/////////////////");
   PrintArr(MasOfActionSteps);
-  */
+  
   //Serial.println();
   //    PrintArr(MasOfActionSteps);
   //    PrintArr1(MasOfAction);
@@ -387,24 +379,36 @@ byte lord_of_the_builders_brotherhood_array() { //153221534
         count++;
         switch (count) {
           case 1:
+          if (longdata <= 6 and longdata != 0)
+              inputMas[5][0] = longdata;
+            else
+              inputMas[5][1] = longdata + 5;
+            break;
+          case 2:
             inputMas[0][0] = typeE;
             inputMas[0][1] = typeW + 5;
             break;
-          case 2:
+          case 3:
             inputMas[1][0] = typeE;
             inputMas[1][1] = typeW + 5;
             break;
-          case 3:
+          case 4:
             inputMas[2][0] = typeE;
             inputMas[2][1] = typeW + 5;
             break;
-          case 4:
+          case 5:
             inputMas[3][0] = typeE;
             inputMas[3][1] = typeW + 5;
             break;
-          case 5:
+          case 6:
             inputMas[4][0] = typeE;
-            inputMas[4][1] = typeW + 5;
+            inputMas[4][1] = 0;
+            break;
+          case 7:
+            if (longdata <= 6 and longdata != 0)
+              inputMas[6][0] = longdata;
+            else
+              inputMas[6][1] = longdata + 5;
             break;
         }
         break;
@@ -615,7 +619,7 @@ void Fix() {
       finalMas[i][3] += CUBE_HEIGHT_B;
       finalMas[i][6] += CUBE_HEIGHT_B;
     }
-    else if (finalMas[i][0] == 1 || finalMas[i][0] == 2) {
+    else if (finalMas[i][0] == 1 || finalMas[i][0] == 2 || finalMas[i][0] == 3) {
       finalMas[i][3] += CUBE_HEIGHT_S;
       finalMas[i][6] += CUBE_HEIGHT_S;
     }
@@ -685,12 +689,18 @@ void ZeroFunktion() {
     Astepper.tick();
     Zstepper.tick();
   }
+//  lord_of_the_builders_brotherhood_array();
+  WaitPl();
 
-  ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  lord_of_the_builders_brotherhood_array();
-  ///////////////       ВЫЗОВ ПЕРВОЙ ФУНКЦИИ
-  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-    delay(1);
+  Astepper.setTarget(rotate(180 - 25));
+  Zstepper.setTarget(200);
+  while (Astepper.getState() || Zstepper.getState() || millis() - tmr < 100) {
+    Astepper.tick();
+    Zstepper.tick();
+  }
+//  lord_of_the_builders_brotherhood_array();
+  WaitPl();
+
 
   ServoZZ.write(ServZZ[1]);
   delay(100);
@@ -698,21 +708,19 @@ void ZeroFunktion() {
     Astepper.setTarget(rotate(180 - 70 + 30 * i));
     while (Astepper.getState())
       Astepper.tick();
-    if (i == 0) {
-      Zstepper.setTarget(200);
-      while (Zstepper.getState())
-        Zstepper.tick();
-    }
-    ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    lord_of_the_builders_brotherhood_array();
-    ///////////////       ВЫЗОВ ВТОРОЙ ФУНКЦИИ
-    while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
-      delay(1);
+//    lord_of_the_builders_brotherhood_array();
+    WaitPl();
   }
+  
+  Astepper.setTarget(rotate(25));
+  while (Astepper.getState())
+      Astepper.tick();
+//  lord_of_the_builders_brotherhood_array();
+  WaitPl();
 }
 
 void PointG() {
-
+  int arrHeight[40][10];
   int (*a)[4];
   //Serial.print("sizeof(MasOfAction) = ");
   //Serial.println(sizeof(MasOfAction));
@@ -723,45 +731,75 @@ void PointG() {
   arrHeight[0][2] = 72;
   arrHeight[0][3] = 72;
   arrHeight[0][4] = 72;
+  arrHeight[0][5] = 72;
+  arrHeight[0][6] = 0;
+  arrHeight[0][7] = 0;
+  arrHeight[0][8] = 0;
+  arrHeight[0][9] = 72;
   int i = 0;
   while (finalMas[i][0] != 99) {
 
     if (finalMas[i][1] == 0)
       MoveToStart(finalMas[i][2], finalMas[i][3], finalMas[i][0]);
-    else
+    else if(finalMas[i][1] == 1 && finalMas[i][2] < 5)
       MoveToFinish(finalMas[i][2], finalMas[i][3], finalMas[i][0]);
+    else
+      MoveToZapas(finalMas[i][2], finalMas[i][3], finalMas[i][0]);
 
     MasOfActionSteps[IndexOfActionSteps][4] = (finalMas[i][0] == 0) ? ServZ[1] : ServZ[2];
-
+    if(finalMas[i][0] == 3) {
+      MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B);
+      MasOfActionSteps[IndexOfActionSteps][4] = ServZ[1];
+    }
+      
     int indexArrHeight = finalMas[i][2];
-    if (finalMas[i][1])
+    if (finalMas[i][1] == 1)
       indexArrHeight += 5;
     indexArrHeight = Fix2(indexArrHeight);
+    indexArrHeight = Fix3(indexArrHeight);
+    if(finalMas[i][1] == 1) {
+      if(indexArrHeight == 11)
+        indexArrHeight = 9;
+      else if(indexArrHeight == 12)
+        indexArrHeight = 5;
+    }
     arrHeight[IndexOfActionSteps][indexArrHeight] -= (finalMas[i][0] == 0) ? CUBE_HEIGHT_B : CUBE_HEIGHT_S;
     arrHeight[IndexOfActionSteps][indexArrHeight] -= (finalMas[i][0] == 2) ? CUBE_HEIGHT_S : 0;
-    for (int a = 0; a < 8; a++)
+    for (int a = 0; a < 10; a++)
       arrHeight[IndexOfActionSteps + 1][a] = arrHeight[IndexOfActionSteps][a];
 
+    
     IndexOfActionSteps++;
-
-    if (finalMas[i][4] == 0)
-      MoveToStart(finalMas[i][5], finalMas[i][6], finalMas[i][0]);
-    else
-      MoveToFinish(finalMas[i][5], finalMas[i][6], finalMas[i][0]);
-
-    MasOfActionSteps[IndexOfActionSteps][4] = ServZ[0];
-
-
-    indexArrHeight = finalMas[i][5];
-    if (finalMas[i][4])
-      indexArrHeight += 5;
-    indexArrHeight = Fix2(indexArrHeight);
-    arrHeight[IndexOfActionSteps][indexArrHeight] += (finalMas[i][0] == 0) ? CUBE_HEIGHT_B : CUBE_HEIGHT_S;
-    arrHeight[IndexOfActionSteps][indexArrHeight] += (finalMas[i][0] == 2) ? CUBE_HEIGHT_S : 0;
-    for (int a = 0; a < 8; a++)
-      arrHeight[IndexOfActionSteps + 1][a] = arrHeight[IndexOfActionSteps][a];
-
-    IndexOfActionSteps++;
+    if(finalMas[i][0] != 3) {
+  
+      if (finalMas[i][4] == 0)
+        MoveToStart(finalMas[i][5], finalMas[i][6], finalMas[i][0]);
+      else if(finalMas[i][4] == 1 && finalMas[i][5] < 5)
+        MoveToFinish(finalMas[i][5], finalMas[i][6], finalMas[i][0]);
+      else
+        MoveToZapas(finalMas[i][5], finalMas[i][6], finalMas[i][0]);
+  
+      MasOfActionSteps[IndexOfActionSteps][4] = ServZ[0];
+  
+  
+      indexArrHeight = finalMas[i][5];
+      if (finalMas[i][4] == 1)
+        indexArrHeight += 5;
+      indexArrHeight = Fix2(indexArrHeight);
+      indexArrHeight = Fix3(indexArrHeight);
+      if(finalMas[i][4] == 1) {
+        if(indexArrHeight == 11)
+          indexArrHeight = 9;
+        else if(indexArrHeight == 12)
+          indexArrHeight = 5;
+      }
+      arrHeight[IndexOfActionSteps][indexArrHeight] += (finalMas[i][0] == 0) ? CUBE_HEIGHT_B : CUBE_HEIGHT_S;
+      arrHeight[IndexOfActionSteps][indexArrHeight] += (finalMas[i][0] == 2) ? CUBE_HEIGHT_S : 0;
+      for (int a = 0; a < 10; a++)
+        arrHeight[IndexOfActionSteps + 1][a] = arrHeight[IndexOfActionSteps][a];
+  
+      IndexOfActionSteps++;
+    }
     i++;
   }
   MasOfActionSteps[IndexOfActionSteps][0] = -1;
@@ -773,25 +811,33 @@ void PointG() {
   while (finalMas[i][0] != 99) {
     int fin = Fix2(finalMas[i][2] + ((finalMas[i][1]) ? 5 : 0));
     int fout = Fix2(finalMas[i][5] + ((finalMas[i][4]) ? 5 : 0));
-    Serial.print("Index = ");
-    Serial.println(IndexOfActionSteps);
-    Serial.println(fin);
-    Serial.println(fout);
-    Serial.println();
-    arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps);
+    if(MasOfActionSteps[IndexOfActionSteps][0] > MasOfActionSteps[IndexOfActionSteps + 1][0])
+      arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps, 0);
+    else
+      arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps, 1);
     IndexOfActionSteps++;
 
     fin = Fix2(finalMas[i][5] + ((finalMas[i][4]) ? 5 : 0));
     fout = Fix2(finalMas[i + 1][2] + ((finalMas[i + 1][1]) ? 5 : 0));
-    Serial.print("Index = ");
-    Serial.println(IndexOfActionSteps);
-    Serial.println(fin);
-    Serial.println(fout);
-    Serial.println();
-    arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps);
+    if(MasOfActionSteps[IndexOfActionSteps][0] > MasOfActionSteps[IndexOfActionSteps + 1][0])
+      arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps, 0);
+    else
+      arrStepsHeight[IndexOfActionSteps] = MaxHeight(arrHeight, fin, fout, IndexOfActionSteps, 1);
     IndexOfActionSteps++;
     i++;
   }
+  
+  Serial.println("/////////////////");
+  for (int i = 0; i < 40; i++) {
+    Serial.print(i);
+    Serial.print("  ");
+    for (int j = 0; j < 10; j++) {
+      Serial.print(int(arrHeight[i][j]));
+      Serial.print("  ");
+    }
+    Serial.println();
+  }
+
 }
 
 int Fix2(int a) {
@@ -802,6 +848,36 @@ int Fix2(int a) {
   return a;
 }
 
+int Fix3(int a) {
+  if(a >= 5)
+    a++;
+  return a;
+}
+
+int MaxHeight(int (&SomeArr)[40][10], int a, int b, int indexS, bool F) {
+  int i = a;
+  int m = 0;
+  
+  m = SomeArr[indexS][i];
+    
+  do {
+    if(F)
+      i++;
+    else
+      i--;
+      
+    if(i == -1)
+      i = 9;
+    if(i == 10)
+      i = 0;
+      
+    if(SomeArr[indexS][i] >= m)
+      m = SomeArr[indexS][i];
+  } while(i != b);
+  return m;
+}
+
+/*
 int MaxHeight(int (&SomeArr)[40][8], int a, int b, int indexS) {
   int i = a;
   int m = 0;
@@ -819,10 +895,11 @@ int MaxHeight(int (&SomeArr)[40][8], int a, int b, int indexS) {
   } while(i != b);
   return m;
 }
+*/
 
 void MoveToFinish(int Indx, int MMy, int T) {
   int deltaAngle = 22;
-  int smeshenie = 270;
+  int smeshenie = 268;
   int angle;
   switch (Indx) {
     case 0:
@@ -831,7 +908,7 @@ void MoveToFinish(int Indx, int MMy, int T) {
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1] + ServY[2];
       break;
     case 1:
-      angle = rotate(smeshenie - 3);
+      angle = rotate(smeshenie - 5);
       MasOfActionSteps[IndexOfActionSteps][2] = ServX[2] + 10;
       MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
       break;
@@ -852,8 +929,32 @@ void MoveToFinish(int Indx, int MMy, int T) {
     MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
 }
 
+void MoveToZapas(int Indx, int MMy, int T) {
+  int angle;
+  int deltaAngle = 8;
+  switch (Indx) {
+    case 0:
+      angle = rotate(180 + 25 + deltaAngle - 12);
+      break;
+    case 1:
+      angle = rotate(-25 - deltaAngle);
+      break;
+  }
+  MasOfActionSteps[IndexOfActionSteps][2] = ServX[2];
+  MasOfActionSteps[IndexOfActionSteps][3] = ServY[1];
+
+  if(IndexOfActionSteps > 0)
+    MasOfActionSteps[IndexOfActionSteps][0] = relativelyPos(MasOfActionSteps[IndexOfActionSteps - 1][0], angle);
+  else
+    MasOfActionSteps[IndexOfActionSteps][0] = angle;
+
+  MasOfActionSteps[IndexOfActionSteps][1] = MoveMM(MMy + gap * 2);
+  if (T == 0)
+    MasOfActionSteps[IndexOfActionSteps][1] -= MoveMM(CUBE_HEIGHT_B - CUBE_HEIGHT_S);
+}
+
 void MoveToStart(int Indx, int MMy, int T) {
-  int angle = rotate((30 * Indx) + 30 - Indx);
+  int angle = rotate((30 * Indx) + 18);
   
   if(IndexOfActionSteps > 0)
     MasOfActionSteps[IndexOfActionSteps][0] = relativelyPos(MasOfActionSteps[IndexOfActionSteps - 1][0], angle);
@@ -905,6 +1006,11 @@ void Pisk(int T) {
   tone(MUSIC_PIN, 1920);
   delay(T);
   noTone(MUSIC_PIN);
+}
+
+void WaitPl() {
+  while (digitalRead(Z_AXIS_LIMIT_SWITCH_PIN))
+    delay(1);
 }
 
 void PrintArr(int (&SomeArr)[40][5]) {
