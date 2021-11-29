@@ -437,7 +437,7 @@ void lord_of_the_builders_two_arrays() {
 
   search_spiers();
   bly = inputMas[0][0];
-  loxSpier();
+  removeSpier();
   inputMas[0][0] = bly;
   while (!workQuestion()) {
 //    if(tmr > 40)
@@ -484,7 +484,7 @@ bool checkKub(byte indexMain) {
     return true;
 }
 
-void loxSpier() {
+void removeSpier() {
   for (byte i = 0; i <= 4; i++) {
     if (inputMas[i][1] != spiersMas[0] and inputMas[i][1] != spiersMas[1] and inputMas[i][1] != spiersMas[2]) {
       for (byte j = 0; j <= 2; j++) {
