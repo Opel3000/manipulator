@@ -477,18 +477,18 @@ void lord_of_the_builders_two_arrays() {
   }
 }
 
-bool checkKub(byte indexMain) {
+bool checkKub(byte indexMain) { // проверка есть ли куб на позиции, которая нам нужна
   if (inputMas[indexMain][1] != 0)
     return false;
   else
     return true;
 }
 
-void removeSpier() {
+void removeSpier() { // перенос не нужного куба в зону, которую мы больше не используем
   for (byte i = 0; i <= 4; i++) {
-    if (inputMas[i][1] != spiersMas[0] and inputMas[i][1] != spiersMas[1] and inputMas[i][1] != spiersMas[2]) {
+    if (inputMas[i][1] != spiersMas[0] and inputMas[i][1] != spiersMas[1] and inputMas[i][1] != spiersMas[2]) { // поиск необходимого куба
       for (byte j = 0; j <= 2; j++) {
-        array_generator(3, 0, i, CUBE_HIGHT_B, 0, 0, 0);
+        array_generator(3, 0, i, CUBE_HIGHT_B, 0, 0, 0); // непосредственное перемещение 
         inputMas[i][1] = 0;
         break;
       }
