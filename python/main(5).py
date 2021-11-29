@@ -22,22 +22,22 @@ def segimg(F):
     return F
     
     
-def obrezka(F, hsv_min, hsv_max):
+def obrezka(F, hsv_min, hsv_max): # анализ фотографии
     
-    flagError = False
+    flagError = False 
 
-    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV)
+    F = cv2.cvtColor(F, cv2.COLOR_BGR2HSV) # преобразуем фотографию из BGR в HSV 
 
-    F = cv2.inRange(F, hsv_min, hsv_max)
+    F = cv2.inRange(F, hsv_min, hsv_max)  # сигментируем изображение создавая ч/б фото 
 
     w, h = 0, 0
-    contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    contours = contours[0]
+    contours = cv2.findContours(F, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) # перебираем все подходящие объекты
+    contours = contours[0] # берём наибольший объект
     if contours:
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        (_, _, w, h) = cv2.boundingRect(contours[0])
+        (_, _, w, h) = cv2.boundingRect(contours[0]) # находим ширину и высоту объекта
 
-        if h > 10 and w > 10:
+        if h > 10 and w > 10: # отсеиваем не нужные 
             flagError = True
         else:
             flagError = False
